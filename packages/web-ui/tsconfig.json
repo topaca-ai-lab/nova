@@ -1,0 +1,21 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ES2022",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"moduleResolution": "bundler",
+		"noEmit": true,
+		"baseUrl": ".",
+		"paths": {
+			"*": ["./*"],
+			"@nova-ai/nova-agent-core": ["../agent/src/index.ts"],
+			"@nova-ai/nova-agent-core/*": ["../agent/src/*"],
+			"@nova-ai/nova-ai": ["../ai/src/index.ts"],
+			"@nova-ai/nova-ai/*": ["../ai/src/*"],
+			"@nova-ai/nova-tui": ["../tui/src/index.ts"],
+			"@nova-ai/nova-tui/*": ["../tui/src/*"]
+		}
+	},
+	"include": ["src/**/*"]
+}

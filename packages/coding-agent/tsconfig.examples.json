@@ -1,0 +1,16 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"paths": {
+			"@nova-ai/nova-coding-agent": ["./src/index.ts"],
+			"@nova-ai/nova-coding-agent/hooks": ["./src/core/hooks/index.ts"],
+			"@nova-ai/nova-tui": ["../tui/src/index.ts"],
+			"@nova-ai/nova-ai": ["../ai/src/index.ts"],
+			"typebox": ["../../node_modules/typebox"]
+		},
+		"skipLibCheck": true
+	},
+	"include": ["examples/**/*.ts"],
+	"exclude": ["node_modules", "dist"]
+}

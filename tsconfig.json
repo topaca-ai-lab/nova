@@ -1,0 +1,31 @@
+{
+	"extends": "./tsconfig.base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"paths": {
+			"*": ["./*"],
+			"@nova-ai/nova-ai": ["./packages/ai/src/index.ts"],
+			"@nova-ai/nova-ai/oauth": ["./packages/ai/src/oauth.ts"],
+			"@nova-ai/nova-ai/*": ["./packages/ai/src/*.ts", "./packages/ai/src/providers/*.ts"],
+			"@nova-ai/nova-ai/dist/*": ["./packages/ai/src/*"],
+			"@nova-ai/nova-agent-core": ["./packages/agent/src/index.ts"],
+			"@nova-ai/nova-agent-core/*": ["./packages/agent/src/*"],
+			"@nova-ai/nova-coding-agent": ["./packages/coding-agent/src/index.ts"],
+			"@nova-ai/nova-coding-agent/hooks": ["./packages/coding-agent/src/core/hooks/index.ts"],
+			"@nova-ai/nova-coding-agent/*": ["./packages/coding-agent/src/*"],
+			"typebox": ["./node_modules/typebox"],
+			"@nova-ai/nova-mom": ["./packages/mom/src/index.ts"],
+			"@nova-ai/nova-mom/*": ["./packages/mom/src/*"],
+			"@nova-ai/nova-pods": ["./packages/pods/src/index.ts"],
+			"@nova-ai/nova-pods/*": ["./packages/pods/src/*"],
+			"@nova-ai/nova-tui": ["./packages/tui/src/index.ts"],
+			"@nova-ai/nova-tui/*": ["./packages/tui/src/*"],
+			"@nova-ai/nova-web-ui": ["./packages/web-ui/src/index.ts"],
+			"@nova-ai/nova-web-ui/*": ["./packages/web-ui/src/*"],
+			"@nova-ai/nova-agent-old": ["./packages/agent-old/src/index.ts"],
+			"@nova-ai/nova-agent-old/*": ["./packages/agent-old/src/*"]
+		}
+	},
+	"include": ["packages/*/src/**/*", "packages/*/test/**/*", "packages/coding-agent/examples/**/*"],
+	"exclude": ["packages/web-ui/**/*", "**/dist/**"]
+}

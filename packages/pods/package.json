@@ -1,0 +1,45 @@
+{
+	"name": "@nova-ai/nova-pods",
+	"version": "0.69.0",
+	"description": "CLI tool for managing vLLM deployments on GPU pods",
+	"type": "module",
+	"bin": {
+		"nova-pods": "dist/cli.js"
+	},
+	"scripts": {
+		"clean": "shx rm -rf dist",
+		"build": "tsgo -p tsconfig.build.json && shx chmod +x dist/cli.js && shx cp src/models.json dist/ && shx cp -r scripts dist/",
+		"prepublishOnly": "npm run clean && npm run build"
+	},
+	"files": [
+		"dist",
+		"scripts"
+	],
+	"keywords": [
+		"llm",
+		"vllm",
+		"gpu",
+		"ai",
+		"cli"
+	],
+	"author": "TOPACA AI-Lab (Markus Ertel) <hello@topaca.com>",
+	"license": "AGPL-3.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/topaca-ai-lab/nova.git",
+		"directory": "packages/pods"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"dependencies": {
+		"@nova-ai/nova-agent-core": "^0.69.0",
+		"chalk": "^5.5.0"
+	},
+	"devDependencies": {},
+	"bugs": {
+		"url": "https://github.com/topaca-ai-lab/nova/issues",
+		"email": "hello@topaca.com"
+	},
+	"homepage": "https://github.com/topaca-ai-lab/nova"
+}

@@ -1,0 +1,151 @@
+[
+	{
+		"id": "inspect-read-config",
+		"title": "Read config file",
+		"prompt": "Read package.json and summarize scripts.",
+		"expected": { "slot": "inspect", "action": "read" },
+		"execution": { "type": "read", "target": "package.json", "expectContains": "\"scripts\"" }
+	},
+	{
+		"id": "inspect-list-src",
+		"title": "List source tree",
+		"prompt": "List files in src recursively.",
+		"expected": { "slot": "inspect", "action": "list_files" },
+		"execution": { "type": "list_files", "target": "packages/coding-agent/src", "expectContains": "local-cli.ts" }
+	},
+	{
+		"id": "inspect-search-symbol",
+		"title": "Search symbol usage",
+		"prompt": "Find usages of handleLocalCommand in the codebase.",
+		"expected": { "slot": "inspect", "action": "search" },
+		"execution": { "type": "search", "target": "packages/coding-agent/src/local-cli.ts", "query": "handleLocalCommand" }
+	},
+	{
+		"id": "inspect-open-doc",
+		"title": "Inspect roadmap section",
+		"prompt": "Open docs roadmap and extract Phase 3 milestones.",
+		"expected": { "slot": "inspect", "action": "read" },
+		"execution": { "type": "read", "target": "docs/nova-local-core-v1.1-roadmap.md", "expectContains": "Phase 3" }
+	},
+	{
+		"id": "inspect-compare-files",
+		"title": "Compare two files",
+		"prompt": "Inspect differences between two related files and summarize.",
+		"expected": { "slot": "inspect", "action": "read" }
+	},
+	{
+		"id": "modify-small-edit",
+		"title": "Apply targeted edit",
+		"prompt": "Update one function name in a single file.",
+		"expected": { "slot": "modify", "action": "apply_patch" }
+	},
+	{
+		"id": "modify-add-test",
+		"title": "Add regression test",
+		"prompt": "Add a focused unit test for a known bug.",
+		"expected": { "slot": "modify", "action": "write_file" }
+	},
+	{
+		"id": "modify-refactor-const",
+		"title": "Refactor shared constant",
+		"prompt": "Extract duplicated literal into a shared constant.",
+		"expected": { "slot": "modify", "action": "apply_patch" }
+	},
+	{
+		"id": "modify-doc-update",
+		"title": "Update docs text",
+		"prompt": "Edit docs to add one new section.",
+		"expected": { "slot": "modify", "action": "write_file" }
+	},
+	{
+		"id": "modify-fix-types",
+		"title": "Fix TypeScript types",
+		"prompt": "Resolve a strict nullability type error in one module.",
+		"expected": { "slot": "modify", "action": "apply_patch" }
+	},
+	{
+		"id": "execute-run-check",
+		"title": "Run project checks",
+		"prompt": "Run npm run check and report failures.",
+		"expected": { "slot": "execute", "action": "run_command" },
+		"execution": {
+			"type": "run_command",
+			"command": ["node", "-e", "console.log('check-ok')"],
+			"expectContains": "check-ok"
+		}
+	},
+	{
+		"id": "execute-run-test",
+		"title": "Run targeted test",
+		"prompt": "Run one specific vitest test file and return result.",
+		"expected": { "slot": "execute", "action": "run_command" },
+		"execution": {
+			"type": "run_command",
+			"command": ["node", "-e", "console.log('test-ok')"],
+			"expectContains": "test-ok"
+		}
+	},
+	{
+		"id": "execute-print-env",
+		"title": "Inspect environment",
+		"prompt": "Print active environment variables relevant for local runtime.",
+		"expected": { "slot": "execute", "action": "run_command" },
+		"execution": {
+			"type": "run_command",
+			"command": ["node", "-e", "console.log(process.cwd())"],
+			"expectContains": "/Users/"
+		}
+	},
+	{
+		"id": "execute-git-status",
+		"title": "Collect workspace status",
+		"prompt": "Run git status and summarize tracked changes.",
+		"expected": { "slot": "execute", "action": "run_command" },
+		"execution": {
+			"type": "run_command",
+			"command": ["node", "-e", "console.log('status-ok')"],
+			"expectContains": "status-ok"
+		}
+	},
+	{
+		"id": "execute-lint-one-file",
+		"title": "Check single file",
+		"prompt": "Run lint/type check for one file or package.",
+		"expected": { "slot": "execute", "action": "run_command" },
+		"execution": {
+			"type": "run_command",
+			"command": ["node", "-e", "console.log('lint-ok')"],
+			"expectContains": "lint-ok"
+		}
+	},
+	{
+		"id": "meta-summarize-state",
+		"title": "Summarize task state",
+		"prompt": "Summarize current implementation state and next step.",
+		"expected": { "slot": "meta", "action": "summarize_state" }
+	},
+	{
+		"id": "meta-update-state",
+		"title": "Update task state",
+		"prompt": "Write concise task status after tool outcomes.",
+		"expected": { "slot": "meta", "action": "update_task_state" }
+	},
+	{
+		"id": "meta-escalate-repair",
+		"title": "Escalate after repeated failures",
+		"prompt": "Escalate with reason when repair attempts are exhausted.",
+		"expected": { "slot": "meta", "action": "escalate" }
+	},
+	{
+		"id": "meta-maintenance-compact",
+		"title": "Maintenance compaction decision",
+		"prompt": "Trigger maintenance compaction when turn interval threshold is met.",
+		"expected": { "slot": "meta", "action": "update_task_state" }
+	},
+	{
+		"id": "meta-final-report",
+		"title": "Finalize run report",
+		"prompt": "Provide concise final report with risks and next actions.",
+		"expected": { "slot": "meta", "action": "summarize_state" }
+	}
+]

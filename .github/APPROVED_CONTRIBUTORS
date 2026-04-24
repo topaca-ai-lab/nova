@@ -1,0 +1,7 @@
+# Approved contributors
+# Format: <username> <capability>
+# capability:
+#   issue  future issues receive gate bypass
+#   pr     future issues and PRs receive gate bypass
+
+markusertel pr

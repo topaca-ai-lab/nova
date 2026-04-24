@@ -1,0 +1,50 @@
+{
+	"name": "@nova-ai/nova-agent-core",
+	"version": "0.69.0",
+	"description": "General-purpose agent with transport abstraction, state management, and attachment support",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist",
+		"README.md"
+	],
+	"scripts": {
+		"clean": "shx rm -rf dist",
+		"build": "tsgo -p tsconfig.build.json",
+		"dev": "tsgo -p tsconfig.build.json --watch --preserveWatchOutput",
+		"test": "vitest --run",
+		"prepublishOnly": "npm run clean && npm run build"
+	},
+	"dependencies": {
+		"@nova-ai/nova-ai": "^0.69.0",
+		"typebox": "^1.1.24"
+	},
+	"keywords": [
+		"ai",
+		"agent",
+		"llm",
+		"transport",
+		"state-management"
+	],
+	"author": "TOPACA AI-Lab (Markus Ertel) <hello@topaca.com>",
+	"license": "AGPL-3.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/topaca-ai-lab/nova.git",
+		"directory": "packages/agent"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^24.3.0",
+		"typescript": "^5.7.3",
+		"vitest": "^3.2.4"
+	},
+	"bugs": {
+		"url": "https://github.com/topaca-ai-lab/nova/issues",
+		"email": "hello@topaca.com"
+	},
+	"homepage": "https://github.com/topaca-ai-lab/nova"
+}

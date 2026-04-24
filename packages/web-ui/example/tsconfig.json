@@ -1,0 +1,28 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ES2022",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"moduleResolution": "bundler",
+		"baseUrl": ".",
+		"paths": {
+			"*": ["./*"],
+			"@nova-ai/nova-agent-core": ["../../agent/src/index.ts"],
+			"@nova-ai/nova-agent-core/*": ["../../agent/src/*"],
+			"@nova-ai/nova-ai": ["../../ai/src/index.ts"],
+			"@nova-ai/nova-ai/*": ["../../ai/src/*"],
+			"@nova-ai/nova-tui": ["../../tui/src/index.ts"],
+			"@nova-ai/nova-tui/*": ["../../tui/src/*"],
+			"@nova-ai/nova-web-ui": ["../src/index.ts"],
+			"@nova-ai/nova-web-ui/*": ["../src/*"]
+		},
+		"strict": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"experimentalDecorators": true,
+		"useDefineForClassFields": false
+	},
+	"include": ["src/**/*"],
+	"exclude": ["../src"]
+}
