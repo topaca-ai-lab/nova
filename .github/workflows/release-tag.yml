@@ -1,0 +1,55 @@
+name: Release Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Release type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Compute next version
+        id: next
+        run: |
+          TYPE="${{ github.event.inputs.release_type }}"
+          VERSION=$(node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('packages/ai/package.json','utf8')); const [ma,mi,pa]=p.version.split('.').map(Number); if('${TYPE}'==='patch'){console.log([ma,mi,pa+1].join('.'));} else {console.log([ma,mi+1,0].join('.'));}")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure tag does not exist
+        run: |
+          if git rev-parse "${{ steps.next.outputs.tag }}" >/dev/null 2>&1; then
+            echo "Tag already exists: ${{ steps.next.outputs.tag }}"
+            exit 1
+          fi
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.next.outputs.tag }}" -m "Release ${{ steps.next.outputs.tag }}"
+          git push origin "${{ steps.next.outputs.tag }}"
+
+      - name: Summary
+        run: |
+          echo "Created tag: ${{ steps.next.outputs.tag }}"

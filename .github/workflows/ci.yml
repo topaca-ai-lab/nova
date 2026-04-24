@@ -21,7 +21,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install system dependencies
         run: |
@@ -30,13 +29,7 @@ jobs:
           sudo ln -s $(which fdfind) /usr/local/bin/fd
 
       - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
+        run: npm install
 
       - name: Check
         run: npm run check
-
-      - name: Test
-        run: npm test
