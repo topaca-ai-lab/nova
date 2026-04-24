@@ -13,7 +13,7 @@ jobs:
       issues: write
     steps:
       - name: Check contributor and comment guidance
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const APPROVED_FILE = '.github/APPROVED_CONTRIBUTORS';
