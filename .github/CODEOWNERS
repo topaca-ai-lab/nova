@@ -1,0 +1,19 @@
+# Global default owner
+* @markus-ertel
+
+# Core policy and workflows
+/.github/ @markus-ertel
+/LICENSE @markus-ertel
+/COMMERCIAL_LICENSE.md @markus-ertel
+/THIRD_PARTY_NOTICES.md @markus-ertel
+
+# Runtime and agent core
+/packages/agent/ @markus-ertel
+/packages/ai/ @markus-ertel
+/packages/coding-agent/ @markus-ertel
+
+# UI and integrations
+/packages/tui/ @markus-ertel
+/packages/web-ui/ @markus-ertel
+/packages/mom/ @markus-ertel
+/packages/pods/ @markus-ertel
