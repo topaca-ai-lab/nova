@@ -8,7 +8,14 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { AgentMessage } from "@nova-ai/nova-agent-core";
-import type { AssistantMessage, ImageContent, Message, Model, OAuthProviderId } from "@nova-ai/nova-ai";
+import {
+	type AssistantMessage,
+	getLocalRuntimeProfile,
+	type ImageContent,
+	type Message,
+	type Model,
+	type OAuthProviderId,
+} from "@nova-ai/nova-ai";
 import type {
 	AutocompleteItem,
 	AutocompleteProvider,
@@ -45,6 +52,7 @@ import {
 	getAgentDir,
 	getAuthPath,
 	getDebugLogPath,
+	getModelsPath,
 	getShareViewerUrl,
 	getUpdateInstruction,
 	VERSION,
@@ -190,9 +198,36 @@ const API_KEY_PROVIDER_NAMES: Record<string, string> = {
 };
 
 const API_KEY_LOGIN_PROVIDER_BLOCKLIST = new Set(["amazon-bedrock", "llama.cpp", "lmstudio", "ollama"]);
+const LOCAL_LOGIN_OPTION_LABEL = "Use local LLM";
+const LOCAL_PROVIDER_ID = "local-openai";
+const DEFAULT_LOCAL_PROFILE_ID = "ollama_openai_compat";
 
 function getApiKeyProviderDisplayName(providerId: string): string {
 	return API_KEY_PROVIDER_NAMES[providerId] ?? providerId;
+}
+
+type LocalModelsConfig = {
+	providers?: Record<string, unknown>;
+};
+
+function isLocalModelsConfig(value: unknown): value is LocalModelsConfig {
+	return typeof value === "object" && value !== null;
+}
+
+function getOpenAICompatForLocalProfile(profileId: string): Record<string, unknown> | undefined {
+	const profile = getLocalRuntimeProfile(profileId);
+	if (!profile) {
+		return undefined;
+	}
+
+	return {
+		supportsDeveloperRole: profile.supportsDeveloperRole,
+		supportsReasoningEffort: profile.supportsReasoningEffort,
+		requiresToolResultName: profile.requiresToolResultName,
+		requiresAssistantAfterToolResult: profile.requiresAssistantAfterToolResult,
+		maxTokensField: profile.maxTokensField,
+		supportsStrictMode: profile.supportsJsonSchema,
+	};
 }
 
 /**
@@ -4353,9 +4388,13 @@ export class InteractiveMode {
 		this.showSelector((done) => {
 			const selector = new ExtensionSelectorComponent(
 				"Select authentication method:",
-				[subscriptionLabel, apiKeyLabel],
+				[subscriptionLabel, apiKeyLabel, LOCAL_LOGIN_OPTION_LABEL],
 				(option) => {
 					done();
+					if (option === LOCAL_LOGIN_OPTION_LABEL) {
+						void this.showLocalLlmLoginDialog();
+						return;
+					}
 					const authType = option === subscriptionLabel ? "oauth" : "api_key";
 					this.showLoginProviderSelector(authType);
 				},
@@ -4503,6 +4542,140 @@ export class InteractiveMode {
 				void this.maybeWarnAboutAnthropicSubscriptionAuth();
 			}
 		}
+	}
+
+	private async showLocalLlmLoginDialog(): Promise<void> {
+		const dialog = new LoginDialogComponent(this.ui, LOCAL_PROVIDER_ID, () => {}, "Local LLM");
+		const restoreEditor = () => {
+			this.editorContainer.clear();
+			this.editorContainer.addChild(this.editor);
+			this.ui.setFocus(this.editor);
+			this.ui.requestRender();
+		};
+
+		this.editorContainer.clear();
+		this.editorContainer.addChild(dialog);
+		this.ui.setFocus(dialog);
+		this.ui.requestRender();
+
+		try {
+			const baseUrlInput = (
+				await dialog.showPrompt(
+					"Base URL (OpenAI-compatible endpoint):",
+					process.env.NOVA_LOCAL_BASE_URL || process.env.OPENAI_BASE_URL || "http://127.0.0.1:4000/v1",
+				)
+			).trim();
+			const baseUrl = baseUrlInput || process.env.NOVA_LOCAL_BASE_URL || process.env.OPENAI_BASE_URL;
+			if (!baseUrl) {
+				throw new Error("Base URL cannot be empty.");
+			}
+
+			const modelInput = (
+				await dialog.showPrompt("Model ID:", process.env.NOVA_LOCAL_MODEL || "qwen3.6-35b")
+			).trim();
+			const modelId = modelInput || process.env.NOVA_LOCAL_MODEL;
+			if (!modelId) {
+				throw new Error("Model ID cannot be empty.");
+			}
+
+			const profileInput = (
+				await dialog.showPrompt("Runtime profile ID:", process.env.NOVA_LOCAL_PROFILE || DEFAULT_LOCAL_PROFILE_ID)
+			).trim();
+			const profileId = profileInput || process.env.NOVA_LOCAL_PROFILE || DEFAULT_LOCAL_PROFILE_ID;
+			const compat = getOpenAICompatForLocalProfile(profileId);
+			if (!compat) {
+				throw new Error(
+					`Unknown runtime profile "${profileId}". Check 'nova local inspect --json' for available profiles.`,
+				);
+			}
+
+			const apiKeyInput = (
+				await dialog.showPrompt("API key (for LiteLLM often 'test'):", process.env.NOVA_LOCAL_API_KEY || "test")
+			).trim();
+			const apiKey = apiKeyInput || process.env.NOVA_LOCAL_API_KEY || "test";
+
+			this.saveLocalProviderToModelsConfig({
+				providerId: LOCAL_PROVIDER_ID,
+				baseUrl,
+				modelId,
+				apiKey,
+				compat,
+			});
+
+			this.session.modelRegistry.refresh();
+			const modelsJsonError = this.session.modelRegistry.getError();
+			if (modelsJsonError) {
+				throw new Error(modelsJsonError);
+			}
+
+			const model = this.session.modelRegistry.find(LOCAL_PROVIDER_ID, modelId);
+			if (!model) {
+				throw new Error(`Configured model "${modelId}" not found after refresh.`);
+			}
+
+			this.settingsManager.setDefaultModelAndProvider(LOCAL_PROVIDER_ID, modelId);
+			await this.session.setModel(model);
+			await this.updateAvailableProviderCount();
+			this.footer.invalidate();
+			this.updateEditorBorderColor();
+
+			restoreEditor();
+			this.showStatus(`Configured local LLM (${modelId}) via ${LOCAL_PROVIDER_ID}. Saved to ${getModelsPath()}`);
+		} catch (error: unknown) {
+			restoreEditor();
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			if (errorMessage !== "Login cancelled") {
+				this.showError(`Failed to configure local LLM: ${errorMessage}`);
+			}
+		}
+	}
+
+	private saveLocalProviderToModelsConfig(params: {
+		providerId: string;
+		baseUrl: string;
+		modelId: string;
+		apiKey: string;
+		compat: Record<string, unknown>;
+	}): void {
+		const modelsPath = getModelsPath();
+		const modelsDir = path.dirname(modelsPath);
+		if (!fs.existsSync(modelsDir)) {
+			fs.mkdirSync(modelsDir, { recursive: true });
+		}
+
+		let config: LocalModelsConfig = {};
+		if (fs.existsSync(modelsPath)) {
+			const raw = fs.readFileSync(modelsPath, "utf-8").trim();
+			if (raw.length > 0) {
+				const parsed = JSON.parse(raw) as unknown;
+				if (!isLocalModelsConfig(parsed)) {
+					throw new Error(`Invalid models.json structure at ${modelsPath}`);
+				}
+				config = parsed;
+			}
+		}
+
+		const providers = isLocalModelsConfig(config.providers)
+			? { ...(config.providers as Record<string, unknown>) }
+			: {};
+		providers[params.providerId] = {
+			baseUrl: params.baseUrl,
+			apiKey: params.apiKey,
+			authHeader: true,
+			compat: params.compat,
+			models: [
+				{
+					id: params.modelId,
+					name: params.modelId,
+					api: "openai-completions",
+					baseUrl: params.baseUrl,
+					input: ["text"],
+				},
+			],
+		};
+		config.providers = providers;
+
+		fs.writeFileSync(modelsPath, `${JSON.stringify(config, null, "\t")}\n`, "utf-8");
 	}
 
 	private async showApiKeyLoginDialog(providerId: string, providerName: string): Promise<void> {
