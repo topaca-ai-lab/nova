@@ -7,7 +7,7 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage } from "@topaca/nova-agent-core";
+import type { AgentMessage } from "@nova-ai/nova-agent-core";
 import {
 	type AssistantMessage,
 	getLocalRuntimeProfile,
@@ -15,7 +15,7 @@ import {
 	type Message,
 	type Model,
 	type OAuthProviderId,
-} from "@topaca/nova-ai";
+} from "@nova-ai/nova-ai";
 import type {
 	AutocompleteItem,
 	AutocompleteProvider,
@@ -27,7 +27,7 @@ import type {
 	OverlayHandle,
 	OverlayOptions,
 	SlashCommand,
-} from "@topaca/nova-tui";
+} from "@nova-ai/nova-tui";
 import {
 	CombinedAutocompleteProvider,
 	type Component,
@@ -44,7 +44,7 @@ import {
 	TruncatedText,
 	TUI,
 	visibleWidth,
-} from "@topaca/nova-tui";
+} from "@nova-ai/nova-tui";
 import { spawn, spawnSync } from "child_process";
 import {
 	APP_NAME,
@@ -792,7 +792,7 @@ export class InteractiveMode {
 		if (process.env.NOVA_SKIP_VERSION_CHECK || process.env.NOVA_OFFLINE) return undefined;
 
 		try {
-			const response = await fetch("https://registry.npmjs.org/@topaca/nova-coding-agent/latest", {
+			const response = await fetch("https://registry.npmjs.org/@nova-ai/nova-coding-agent/latest", {
 				signal: AbortSignal.timeout(10000),
 			});
 			if (!response.ok) return undefined;
@@ -3487,7 +3487,7 @@ export class InteractiveMode {
 	}
 
 	showNewVersionNotification(newVersion: string): void {
-		const action = theme.fg("accent", getUpdateInstruction("@topaca/nova-coding-agent"));
+		const action = theme.fg("accent", getUpdateInstruction("@nova-ai/nova-coding-agent"));
 		const updateInstruction = theme.fg("muted", `New version ${newVersion} is available. `) + action;
 		const changelogUrl = theme.fg(
 			"accent",
