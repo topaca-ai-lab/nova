@@ -8,19 +8,33 @@ The repository contains a TypeScript monorepo with a production-grade CLI agent,
 
 | Package | Purpose |
 | --- | --- |
-| `@nova-ai/nova-coding-agent` | Main CLI agent (`nova`) with tools, sessions, and local runtime support |
-| `@nova-ai/nova-agent-core` | Agent loop, state, tool orchestration, transport abstractions |
-| `@nova-ai/nova-ai` | Unified LLM provider layer and streaming interfaces |
-| `@nova-ai/nova-tui` | High-performance terminal rendering primitives |
-| `@nova-ai/nova-web-ui` | Reusable web components for chat-style AI interfaces |
-| `@nova-ai/nova-mom` | Slack integration layer for delegated workflows |
-| `@nova-ai/nova-pods` | GPU pod and vLLM operations CLI |
+| `@topaca/nova-coding-agent` | Main CLI agent (`nova`) with tools, sessions, and local runtime support |
+| `@topaca/nova-agent-core` | Agent loop, state, tool orchestration, transport abstractions |
+| `@topaca/nova-ai` | Unified LLM provider layer and streaming interfaces |
+| `@topaca/nova-tui` | High-performance terminal rendering primitives |
+| `@topaca/nova-web-ui` | Reusable web components for chat-style AI interfaces |
+| `@topaca/nova-mom` | Slack integration layer for delegated workflows |
+| `@topaca/nova-pods` | GPU pod and vLLM operations CLI |
 
 ## Requirements
 
 - Node.js `>=20`
 - npm `>=10`
 - macOS/Linux/WSL recommended for full CLI tooling
+
+## Install (Global CLI)
+
+Install Nova globally from npm:
+
+```bash
+npm install -g @topaca/nova-coding-agent
+```
+
+Verify installation:
+
+```bash
+nova --help
+```
 
 ## Quick Start
 
@@ -43,7 +57,7 @@ npm run dev
 
 ## CLI Usage
 
-The main CLI binary is `nova` (from `@nova-ai/nova-coding-agent`).
+The main CLI binary is `nova` (from `@topaca/nova-coding-agent`).
 
 After package build or global installation:
 
