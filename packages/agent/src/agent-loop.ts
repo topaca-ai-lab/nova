@@ -10,7 +10,7 @@ import {
 	streamSimple,
 	type ToolResultMessage,
 	validateToolArguments,
-} from "@nova-ai/nova-ai";
+} from "@topaca/nova-ai";
 import type {
 	AgentContext,
 	AgentEvent,

@@ -9,12 +9,12 @@
 		"baseUrl": ".",
 		"paths": {
 			"*": ["./*"],
-			"@nova-ai/nova-agent-core": ["../agent/src/index.ts"],
-			"@nova-ai/nova-agent-core/*": ["../agent/src/*"],
-			"@nova-ai/nova-ai": ["../ai/src/index.ts"],
-			"@nova-ai/nova-ai/*": ["../ai/src/*"],
-			"@nova-ai/nova-tui": ["../tui/src/index.ts"],
-			"@nova-ai/nova-tui/*": ["../tui/src/*"]
+			"@topaca/nova-agent-core": ["../agent/src/index.ts"],
+			"@topaca/nova-agent-core/*": ["../agent/src/*"],
+			"@topaca/nova-ai": ["../ai/src/index.ts"],
+			"@topaca/nova-ai/*": ["../ai/src/*"],
+			"@topaca/nova-tui": ["../tui/src/index.ts"],
+			"@topaca/nova-tui/*": ["../tui/src/*"]
 		}
 	},
 	"include": ["src/**/*"]

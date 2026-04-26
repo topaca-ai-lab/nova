@@ -1,6 +1,6 @@
 {
-	"name": "@nova-ai/nova-pods",
-	"version": "0.69.0",
+	"name": "@topaca/nova-pods",
+	"version": "0.70.2",
 	"description": "CLI tool for managing vLLM deployments on GPU pods",
 	"type": "module",
 	"bin": {
@@ -33,7 +33,7 @@
 		"node": ">=20.0.0"
 	},
 	"dependencies": {
-		"@nova-ai/nova-agent-core": "^0.69.0",
+		"@topaca/nova-agent-core": "^0.70.2",
 		"chalk": "^5.5.0"
 	},
 	"devDependencies": {},

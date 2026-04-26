@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@nova-ai/nova-agent-core";
+import type { AgentMessage } from "@topaca/nova-agent-core";
 import type { TemplateResult } from "lit";
 
 // Extract role type from AppMessage union

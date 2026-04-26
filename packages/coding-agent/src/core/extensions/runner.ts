@@ -2,9 +2,9 @@
  * Extension runner - executes extensions and manages their lifecycle.
  */
 
-import type { AgentMessage } from "@nova-ai/nova-agent-core";
-import type { ImageContent, Model } from "@nova-ai/nova-ai";
-import type { KeyId } from "@nova-ai/nova-tui";
+import type { AgentMessage } from "@topaca/nova-agent-core";
+import type { ImageContent, Model } from "@topaca/nova-ai";
+import type { KeyId } from "@topaca/nova-tui";
 import { type Theme, theme } from "../../modes/interactive/theme/theme.js";
 import type { ResourceDiagnostic } from "../diagnostics.js";
 import type { KeybindingsConfig } from "../keybindings.js";

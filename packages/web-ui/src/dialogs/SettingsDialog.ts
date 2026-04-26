@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader } from "@mariozechner/mini-lit/dist
 import { Input } from "@mariozechner/mini-lit/dist/Input.js";
 import { Label } from "@mariozechner/mini-lit/dist/Label.js";
 import { Switch } from "@mariozechner/mini-lit/dist/Switch.js";
-import { getProviders } from "@nova-ai/nova-ai";
+import { getProviders } from "@topaca/nova-ai";
 import { html, LitElement, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import "../components/ProviderKeyInput.js";

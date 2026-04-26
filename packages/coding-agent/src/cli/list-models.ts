@@ -2,9 +2,10 @@
  * List available models with optional fuzzy search
  */
 
-import type { Api, Model } from "@nova-ai/nova-ai";
-import { fuzzyFilter } from "@nova-ai/nova-tui";
+import type { Api, Model } from "@topaca/nova-ai";
+import { fuzzyFilter } from "@topaca/nova-tui";
 import chalk from "chalk";
+import { formatNoModelsAvailableMessage } from "../core/auth-guidance.js";
 import type { ModelRegistry } from "../core/model-registry.js";
 
 /**
@@ -34,7 +35,7 @@ export async function listModels(modelRegistry: ModelRegistry, searchPattern?: s
 	const models = modelRegistry.getAvailable();
 
 	if (models.length === 0) {
-		console.log("No models available. Set API keys in environment variables.");
+		console.log(formatNoModelsAvailableMessage());
 		return;
 	}
 

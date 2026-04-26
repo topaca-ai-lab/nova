@@ -1,4 +1,4 @@
-import { fuzzyMatch } from "@nova-ai/nova-tui";
+import { fuzzyMatch } from "@topaca/nova-tui";
 import type { SessionInfo } from "../../../core/session-manager.js";
 
 export type SortMode = "threaded" | "recent" | "relevance";

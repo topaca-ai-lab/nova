@@ -1,5 +1,5 @@
-import type { AgentMessage, ThinkingLevel } from "@nova-ai/nova-agent-core";
-import type { Model } from "@nova-ai/nova-ai";
+import type { AgentMessage, ThinkingLevel } from "@topaca/nova-agent-core";
+import type { Model } from "@topaca/nova-ai";
 
 /**
  * Transaction interface for atomic operations across stores.

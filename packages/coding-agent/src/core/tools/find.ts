@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline";
-import type { AgentTool } from "@nova-ai/nova-agent-core";
-import { Text } from "@nova-ai/nova-tui";
+import type { AgentTool } from "@topaca/nova-agent-core";
+import { Text } from "@topaca/nova-tui";
 import { spawn } from "child_process";
 import { existsSync } from "fs";
 import path from "path";

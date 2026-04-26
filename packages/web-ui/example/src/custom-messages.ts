@@ -1,7 +1,7 @@
 import { Alert } from "@mariozechner/mini-lit/dist/Alert.js";
-import type { Message } from "@nova-ai/nova-ai";
-import type { AgentMessage, MessageRenderer } from "@nova-ai/nova-web-ui";
-import { defaultConvertToLlm, registerMessageRenderer } from "@nova-ai/nova-web-ui";
+import type { Message } from "@topaca/nova-ai";
+import type { AgentMessage, MessageRenderer } from "@topaca/nova-web-ui";
+import { defaultConvertToLlm, registerMessageRenderer } from "@topaca/nova-web-ui";
 import { html } from "lit";
 
 // ============================================================================
@@ -18,7 +18,7 @@ export interface SystemNotificationMessage {
 
 // Extend CustomAgentMessages interface via declaration merging
 // This must target nova-agent-core where CustomAgentMessages is defined
-declare module "@nova-ai/nova-agent-core" {
+declare module "@topaca/nova-agent-core" {
 	interface CustomAgentMessages {
 		"system-notification": SystemNotificationMessage;
 	}

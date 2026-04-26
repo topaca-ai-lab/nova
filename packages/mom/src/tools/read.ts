@@ -1,5 +1,5 @@
-import type { AgentTool } from "@nova-ai/nova-agent-core";
-import type { ImageContent, TextContent } from "@nova-ai/nova-ai";
+import type { AgentTool } from "@topaca/nova-agent-core";
+import type { ImageContent, TextContent } from "@topaca/nova-ai";
 import { extname } from "path";
 import { Type } from "typebox";
 import type { Executor } from "../sandbox.js";

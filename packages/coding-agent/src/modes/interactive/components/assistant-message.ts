@@ -1,5 +1,5 @@
-import type { AssistantMessage } from "@nova-ai/nova-ai";
-import { Container, Markdown, type MarkdownTheme, Spacer, Text } from "@nova-ai/nova-tui";
+import type { AssistantMessage } from "@topaca/nova-ai";
+import { Container, Markdown, type MarkdownTheme, Spacer, Text } from "@topaca/nova-tui";
 import { getMarkdownTheme, theme } from "../theme/theme.js";
 
 const OSC133_ZONE_START = "\x1b]133;A\x07";

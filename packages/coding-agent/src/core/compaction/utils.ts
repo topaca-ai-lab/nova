@@ -2,8 +2,8 @@
  * Shared utilities for compaction and branch summarization.
  */
 
-import type { AgentMessage } from "@nova-ai/nova-agent-core";
-import type { Message } from "@nova-ai/nova-ai";
+import type { AgentMessage } from "@topaca/nova-agent-core";
+import type { Message } from "@topaca/nova-ai";
 
 // ============================================================================
 // File Operation Tracking

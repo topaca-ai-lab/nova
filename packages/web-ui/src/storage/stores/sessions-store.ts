@@ -1,4 +1,4 @@
-import type { AgentState } from "@nova-ai/nova-agent-core";
+import type { AgentState } from "@topaca/nova-agent-core";
 import { Store } from "../store.js";
 import type { SessionData, SessionMetadata, StoreConfig } from "../types.js";
 

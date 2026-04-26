@@ -1,6 +1,6 @@
-import type { AgentTool } from "@nova-ai/nova-agent-core";
-import type { Api, ImageContent, Model, TextContent } from "@nova-ai/nova-ai";
-import { Text } from "@nova-ai/nova-tui";
+import type { AgentTool } from "@topaca/nova-agent-core";
+import type { Api, ImageContent, Model, TextContent } from "@topaca/nova-ai";
+import { Text } from "@topaca/nova-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile } from "fs/promises";
 import { type Static, Type } from "typebox";

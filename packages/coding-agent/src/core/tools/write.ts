@@ -1,5 +1,5 @@
-import type { AgentTool } from "@nova-ai/nova-agent-core";
-import { Container, Text } from "@nova-ai/nova-tui";
+import type { AgentTool } from "@topaca/nova-agent-core";
+import { Container, Text } from "@topaca/nova-tui";
 import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
 import { type Static, Type } from "typebox";

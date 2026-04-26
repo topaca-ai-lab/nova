@@ -1,4 +1,4 @@
-import type { AgentTool } from "@nova-ai/nova-agent-core";
+import type { AgentTool } from "@topaca/nova-agent-core";
 import * as Diff from "diff";
 import { Type } from "typebox";
 import type { Executor } from "../sandbox.js";
