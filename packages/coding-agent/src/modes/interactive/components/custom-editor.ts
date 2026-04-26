@@ -1,4 +1,4 @@
-import { Editor, type EditorOptions, type EditorTheme, type TUI } from "@nova-ai/nova-tui";
+import { Editor, type EditorOptions, type EditorTheme, type TUI } from "@topaca/nova-tui";
 import type { AppKeybinding, KeybindingsManager } from "../../../core/keybindings.js";
 
 /**

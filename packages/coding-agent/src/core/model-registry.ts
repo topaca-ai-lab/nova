@@ -16,8 +16,8 @@ import {
 	registerApiProvider,
 	resetApiProviders,
 	type SimpleStreamOptions,
-} from "@nova-ai/nova-ai";
-import { registerOAuthProvider, resetOAuthProviders } from "@nova-ai/nova-ai/oauth";
+} from "@topaca/nova-ai";
+import { registerOAuthProvider, resetOAuthProviders } from "@topaca/nova-ai/oauth";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { type Static, Type } from "typebox";

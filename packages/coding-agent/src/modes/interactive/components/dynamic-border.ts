@@ -1,4 +1,4 @@
-import type { Component } from "@nova-ai/nova-tui";
+import type { Component } from "@topaca/nova-tui";
 import { theme } from "../theme/theme.js";
 
 /**

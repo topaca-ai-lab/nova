@@ -1,5 +1,5 @@
-import type { AgentMessage } from "@nova-ai/nova-agent-core";
-import type { ImageContent, Message, TextContent } from "@nova-ai/nova-ai";
+import type { AgentMessage } from "@topaca/nova-agent-core";
+import type { ImageContent, Message, TextContent } from "@topaca/nova-ai";
 import { randomUUID } from "crypto";
 import {
 	appendFileSync,

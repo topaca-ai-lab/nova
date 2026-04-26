@@ -6,7 +6,7 @@
  * - `nova --mode json "prompt"` - JSON event stream
  */
 
-import type { AssistantMessage, ImageContent } from "@nova-ai/nova-ai";
+import type { AssistantMessage, ImageContent } from "@topaca/nova-ai";
 import type { AgentSessionRuntime } from "../core/agent-session-runtime.js";
 import { flushRawStdout, writeRawStdout } from "../core/output-guard.js";
 import { killTrackedDetachedChildren } from "../utils/shell.js";

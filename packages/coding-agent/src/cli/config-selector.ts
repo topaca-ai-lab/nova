@@ -2,7 +2,7 @@
  * TUI config selector for `nova config` command
  */
 
-import { ProcessTerminal, TUI } from "@nova-ai/nova-tui";
+import { ProcessTerminal, TUI } from "@topaca/nova-tui";
 import type { ResolvedPaths } from "../core/package-manager.js";
 import type { SettingsManager } from "../core/settings-manager.js";
 import { ConfigSelectorComponent } from "../modes/interactive/components/config-selector.js";

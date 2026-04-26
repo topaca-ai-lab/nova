@@ -1,6 +1,6 @@
 {
-	"name": "@nova-ai/nova-mom",
-	"version": "0.69.0",
+	"name": "@topaca/nova-mom",
+	"version": "0.70.2",
 	"description": "Slack bot that delegates messages to the nova coding agent",
 	"type": "module",
 	"bin": {
@@ -20,9 +20,9 @@
 	},
 	"dependencies": {
 		"@anthropic-ai/sandbox-runtime": "^0.0.16",
-		"@nova-ai/nova-agent-core": "^0.69.0",
-		"@nova-ai/nova-ai": "^0.69.0",
-		"@nova-ai/nova-coding-agent": "^0.69.0",
+		"@topaca/nova-agent-core": "^0.70.2",
+		"@topaca/nova-ai": "^0.70.2",
+		"@topaca/nova-coding-agent": "^0.70.2",
 		"typebox": "^1.1.24",
 		"@slack/socket-mode": "^2.0.0",
 		"@slack/web-api": "^7.0.0",

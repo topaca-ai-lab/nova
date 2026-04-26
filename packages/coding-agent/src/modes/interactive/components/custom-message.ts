@@ -1,6 +1,6 @@
-import type { TextContent } from "@nova-ai/nova-ai";
-import type { Component } from "@nova-ai/nova-tui";
-import { Box, Container, Markdown, type MarkdownTheme, Spacer, Text } from "@nova-ai/nova-tui";
+import type { TextContent } from "@topaca/nova-ai";
+import type { Component } from "@topaca/nova-tui";
+import { Box, Container, Markdown, type MarkdownTheme, Spacer, Text } from "@topaca/nova-tui";
 import type { MessageRenderer } from "../../../core/extensions/types.js";
 import type { CustomMessage } from "../../../core/messages.js";
 import { getMarkdownTheme, theme } from "../theme/theme.js";

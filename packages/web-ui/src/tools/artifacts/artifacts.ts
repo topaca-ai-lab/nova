@@ -1,8 +1,8 @@
 import { icon } from "@mariozechner/mini-lit";
 import "@mariozechner/mini-lit/dist/MarkdownBlock.js";
 import { Button } from "@mariozechner/mini-lit/dist/Button.js";
-import type { Agent, AgentMessage, AgentTool } from "@nova-ai/nova-agent-core";
-import { StringEnum, type ToolCall } from "@nova-ai/nova-ai";
+import type { Agent, AgentMessage, AgentTool } from "@topaca/nova-agent-core";
+import { StringEnum, type ToolCall } from "@topaca/nova-ai";
 import { html, LitElement, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { createRef, type Ref, ref } from "lit/directives/ref.js";

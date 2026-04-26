@@ -1,4 +1,4 @@
-import type { AgentTool } from "@nova-ai/nova-agent-core";
+import type { AgentTool } from "@topaca/nova-agent-core";
 import type { Executor } from "../sandbox.js";
 import { attachTool } from "./attach.js";
 import { createBashTool } from "./bash.js";

@@ -1,5 +1,5 @@
-import { getOAuthProviders } from "@nova-ai/nova-ai/oauth";
-import { Container, type Focusable, getKeybindings, Input, Spacer, Text, type TUI } from "@nova-ai/nova-tui";
+import { getOAuthProviders } from "@topaca/nova-ai/oauth";
+import { Container, type Focusable, getKeybindings, Input, Spacer, Text, type TUI } from "@topaca/nova-tui";
 import { exec } from "child_process";
 import { theme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
@@ -31,35 +31,28 @@ export class LoginDialogComponent extends Container implements Focusable {
 		providerId: string,
 		private onComplete: (success: boolean, message?: string) => void,
 		providerNameOverride?: string,
+		titleOverride?: string,
 	) {
 		super();
 		this.tui = tui;
 
 		const providerInfo = getOAuthProviders().find((p) => p.id === providerId);
 		const providerName = providerNameOverride || providerInfo?.name || providerId;
+		const title = titleOverride ?? `Login to ${providerName}`;
 
 		// Top border
 		this.addChild(new DynamicBorder());
 
 		// Title
-		this.addChild(new Text(theme.fg("warning", `Login to ${providerName}`), 1, 0));
+		this.addChild(new Text(theme.fg("accent", theme.bold(title)), 1, 0));
 
 		// Dynamic content area
 		this.contentContainer = new Container();
 		this.addChild(this.contentContainer);
 
-		// Input (always present, used when needed)
+		// Input (created fresh per prompt to avoid stale input state)
 		this.input = new Input();
-		this.input.onSubmit = () => {
-			if (this.inputResolver) {
-				this.inputResolver(this.input.getValue());
-				this.inputResolver = undefined;
-				this.inputRejecter = undefined;
-			}
-		};
-		this.input.onEscape = () => {
-			this.cancel();
-		};
+		this.resetInput();
 
 		// Bottom border
 		this.addChild(new DynamicBorder());
@@ -77,6 +70,21 @@ export class LoginDialogComponent extends Container implements Focusable {
 			this.inputRejecter = undefined;
 		}
 		this.onComplete(false, "Login cancelled");
+	}
+
+	private resetInput(): void {
+		this.input = new Input();
+		this.input.focused = this._focused;
+		this.input.onSubmit = () => {
+			if (this.inputResolver) {
+				this.inputResolver(this.input.getValue());
+				this.inputResolver = undefined;
+				this.inputRejecter = undefined;
+			}
+		};
+		this.input.onEscape = () => {
+			this.cancel();
+		};
 	}
 
 	/**
@@ -107,6 +115,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 	 * Show input for manual code/URL entry (for callback server providers)
 	 */
 	showManualInput(prompt: string): Promise<string> {
+		this.resetInput();
 		this.contentContainer.addChild(new Spacer(1));
 		this.contentContainer.addChild(new Text(theme.fg("dim", prompt), 1, 0));
 		this.contentContainer.addChild(this.input);
@@ -124,6 +133,7 @@ export class LoginDialogComponent extends Container implements Focusable {
 	 * Note: Does NOT clear content, appends to existing (preserves URL from showAuth)
 	 */
 	showPrompt(message: string, placeholder?: string): Promise<string> {
+		this.resetInput();
 		this.contentContainer.addChild(new Spacer(1));
 		this.contentContainer.addChild(new Text(theme.fg("text", message), 1, 0));
 		if (placeholder) {
@@ -154,6 +164,20 @@ export class LoginDialogComponent extends Container implements Focusable {
 		this.contentContainer.addChild(new Spacer(1));
 		this.contentContainer.addChild(new Text(theme.fg("dim", message), 1, 0));
 		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to cancel")})`, 1, 0));
+		this.tui.requestRender();
+	}
+
+	/**
+	 * Show informational text without prompting for input.
+	 */
+	showInfo(lines: string[]): void {
+		this.contentContainer.clear();
+		this.contentContainer.addChild(new Spacer(1));
+		for (const line of lines) {
+			this.contentContainer.addChild(new Text(line, 1, 0));
+		}
+		this.contentContainer.addChild(new Spacer(1));
+		this.contentContainer.addChild(new Text(`(${keyHint("tui.select.cancel", "to close")})`, 1, 0));
 		this.tui.requestRender();
 	}
 

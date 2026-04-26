@@ -1,4 +1,4 @@
-import type { SlotInvocation, SlotSelection, VisibleToolSlot } from "@nova-ai/nova-agent-core";
+import type { SlotInvocation, SlotSelection, VisibleToolSlot } from "@topaca/nova-agent-core";
 
 export type CodingAgentInternalTool = "read" | "ls" | "find" | "grep" | "write" | "edit" | "bash" | "finish";
 

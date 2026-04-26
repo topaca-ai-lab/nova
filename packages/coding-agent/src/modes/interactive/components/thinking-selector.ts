@@ -1,5 +1,5 @@
-import type { ThinkingLevel } from "@nova-ai/nova-agent-core";
-import { Container, type SelectItem, SelectList, type SelectListLayoutOptions } from "@nova-ai/nova-tui";
+import type { ThinkingLevel } from "@topaca/nova-agent-core";
+import { Container, type SelectItem, SelectList, type SelectListLayoutOptions } from "@topaca/nova-tui";
 import { getSelectListTheme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
 

@@ -88,6 +88,7 @@ npm run build
 
 echo "==> Building binaries..."
 cd packages/coding-agent
+REPO_ROOT="$(cd ../.. && pwd)"
 
 # Clean previous builds
 rm -rf binaries
@@ -118,16 +119,24 @@ echo "==> Creating release archives..."
 # Copy shared files to each platform directory
 for platform in "${PLATFORMS[@]}"; do
     cp package.json binaries/$platform/
-    cp README.md binaries/$platform/
-    cp CHANGELOG.md binaries/$platform/
+    if [[ -f "$REPO_ROOT/README.md" ]]; then
+        cp "$REPO_ROOT/README.md" binaries/$platform/
+    fi
+    if [[ -f CHANGELOG.md ]]; then
+        cp CHANGELOG.md binaries/$platform/
+    fi
     cp ../../node_modules/@silvia-odwyer/photon-node/photon_rs_bg.wasm binaries/$platform/
     mkdir -p binaries/$platform/theme
     cp dist/modes/interactive/theme/*.json binaries/$platform/theme/
     mkdir -p binaries/$platform/assets
     cp dist/modes/interactive/assets/* binaries/$platform/assets/
     cp -r dist/core/export-html binaries/$platform/
-    cp -r docs binaries/$platform/
-    cp -r examples binaries/$platform/
+    if [[ -d docs ]]; then
+        cp -r docs binaries/$platform/
+    fi
+    if [[ -d examples ]]; then
+        cp -r examples binaries/$platform/
+    fi
 
     # Copy koffi native module for Windows (needed for VT input support)
     if [[ "$platform" == "windows-x64" ]]; then

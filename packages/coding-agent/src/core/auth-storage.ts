@@ -6,8 +6,14 @@
  * try to refresh tokens simultaneously.
  */
 
-import { getEnvApiKey, type OAuthCredentials, type OAuthLoginCallbacks, type OAuthProviderId } from "@nova-ai/nova-ai";
-import { getOAuthApiKey, getOAuthProvider, getOAuthProviders } from "@nova-ai/nova-ai/oauth";
+import {
+	getEnvApiKey,
+	getEnvApiKeyInfo,
+	type OAuthCredentials,
+	type OAuthLoginCallbacks,
+	type OAuthProviderId,
+} from "@topaca/nova-ai";
+import { getOAuthApiKey, getOAuthProvider, getOAuthProviders } from "@topaca/nova-ai/oauth";
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import lockfile from "proper-lockfile";
@@ -26,6 +32,12 @@ export type OAuthCredential = {
 export type AuthCredential = ApiKeyCredential | OAuthCredential;
 
 export type AuthStorageData = Record<string, AuthCredential>;
+
+export type AuthStatus = {
+	configured: boolean;
+	source?: "stored" | "runtime" | "environment" | "fallback";
+	label?: string;
+};
 
 type LockResult<T> = {
 	result: T;
@@ -322,6 +334,30 @@ export class AuthStorage {
 		if (getEnvApiKey(provider)) return true;
 		if (this.fallbackResolver?.(provider)) return true;
 		return false;
+	}
+
+	/**
+	 * Return auth status without exposing credential values or refreshing tokens.
+	 */
+	getAuthStatus(provider: string): AuthStatus {
+		if (this.data[provider]) {
+			return { configured: true, source: "stored" };
+		}
+
+		if (this.runtimeOverrides.has(provider)) {
+			return { configured: false, source: "runtime", label: "--api-key" };
+		}
+
+		const envKey = getEnvApiKeyInfo(provider);
+		if (envKey) {
+			return { configured: false, source: "environment", label: envKey.label };
+		}
+
+		if (this.fallbackResolver?.(provider)) {
+			return { configured: false, source: "fallback", label: "custom provider config" };
+		}
+
+		return { configured: false };
 	}
 
 	/**

@@ -1,5 +1,5 @@
-import type { ThinkingLevel } from "@nova-ai/nova-agent-core";
-import type { Transport } from "@nova-ai/nova-ai";
+import type { ThinkingLevel } from "@topaca/nova-agent-core";
+import type { Transport } from "@topaca/nova-ai";
 import {
 	Container,
 	getCapabilities,
@@ -10,7 +10,7 @@ import {
 	SettingsList,
 	Spacer,
 	Text,
-} from "@nova-ai/nova-tui";
+} from "@topaca/nova-tui";
 import { getSelectListTheme, getSettingsListTheme, theme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
 

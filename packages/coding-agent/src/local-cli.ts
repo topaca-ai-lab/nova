@@ -1,4 +1,18 @@
-import { type DoctorReport, getLocalRuntimeProfile, probeLocalCapabilities } from "@nova-ai/nova-ai";
+import { type DoctorReport, getLocalRuntimeProfile, probeLocalCapabilities } from "@topaca/nova-ai";
+import {
+	collectNovaStatus,
+	computeRefreshDelay,
+	createNovaStatusWatchContract,
+	createStaticCollector,
+	type DiagnosticProbeResult,
+	mapDependencySignalsToStatus,
+	mapDiagnosticProbesToStatus,
+	mapSchedulerSignalsToStatus,
+	type NovaStatusSnapshot,
+	renderNovaStatusJson,
+	renderNovaStatusText,
+	type SchedulerStatus,
+} from "@topaca/nova-status";
 import chalk from "chalk";
 import { APP_NAME } from "./config.js";
 import { diffBenchmarkReports } from "./core/local/benchmark-diff.js";
@@ -53,6 +67,19 @@ interface LocalBenchDiffOptions {
 	rightRef?: string;
 }
 
+interface StatusCommandOptions {
+	json: boolean;
+	watch: boolean;
+	intervalMs: number;
+	baseUrl: string;
+	model: string;
+	apiKey?: string;
+	backendHint: string;
+	timeoutMs: number;
+	help: boolean;
+	invalidOption?: string;
+}
+
 function isTruthy(value: string | undefined): boolean {
 	if (!value) return false;
 	return value === "1" || value.toLowerCase() === "true" || value.toLowerCase() === "yes";
@@ -81,6 +108,27 @@ function resolveDefaultTimeoutMs(): number {
 		return parsed;
 	}
 	return 20_000;
+}
+
+function resolveDefaultStatusIntervalMs(): number {
+	const parsed = Number.parseInt(process.env.NOVA_STATUS_INTERVAL_MS || "", 10);
+	if (Number.isFinite(parsed) && parsed >= 250) {
+		return parsed;
+	}
+	return 2_000;
+}
+
+function parseOptionalBooleanFlag(value: string | undefined): boolean | undefined {
+	if (value === undefined) {
+		return undefined;
+	}
+	if (value === "1" || value.toLowerCase() === "true" || value.toLowerCase() === "yes") {
+		return true;
+	}
+	if (value === "0" || value.toLowerCase() === "false" || value.toLowerCase() === "no") {
+		return false;
+	}
+	return undefined;
 }
 
 function printLocalDoctorHelp(): void {
@@ -151,6 +199,32 @@ ${chalk.bold("Examples:")}
   ${APP_NAME} local bench run --live --tag vllm-qwen
   ${APP_NAME} local bench run --tasks ./packages/coding-agent/bench/tasks/reference-v1.json
   ${APP_NAME} local bench diff 20260423T170000Z-vllm-qwen-live 20260423T180000Z-vllm-qwen-live
+`);
+}
+
+function printStatusHelp(): void {
+	console.log(`${chalk.bold("Usage:")}
+  ${APP_NAME} status [options]
+
+Show current Nova runtime status (agent, scheduler, diagnostics, dependencies).
+
+${chalk.bold("Options:")}
+  --json                 Output machine-readable JSON status snapshot
+  --watch                Continuously refresh status output
+  --interval-ms <ms>     Watch refresh interval in milliseconds (default: NOVA_STATUS_INTERVAL_MS or 2000)
+  --base-url <url>       Runtime base URL for diagnostics (default: NOVA_LOCAL_BASE_URL, LITELLM_BASE_URL, OPENAI_BASE_URL, or http://localhost:4000)
+  --model <id>           Model ID for diagnostics (default: NOVA_LOCAL_MODEL or qwen3.6)
+  --api-key <key>        API key (default: NOVA_LOCAL_API_KEY or OPENAI_API_KEY)
+  --backend <hint>       Backend hint for diagnostics (default: NOVA_LOCAL_BACKEND or LiteLLM+Ollama)
+  --timeout-ms <ms>      Probe timeout in milliseconds (default: NOVA_LOCAL_TIMEOUT_MS or 20000)
+  -h, --help             Show this help
+
+${chalk.bold("Examples:")}
+  ${APP_NAME} status
+  ${APP_NAME} status --json
+  ${APP_NAME} status watch
+  ${APP_NAME} status --watch
+  ${APP_NAME} status --watch --interval-ms 1000
 `);
 }
 
@@ -333,6 +407,74 @@ function parseLocalBenchDiffOptions(args: string[]): LocalBenchDiffOptions {
 	return options;
 }
 
+function parseStatusCommandOptions(args: string[]): StatusCommandOptions {
+	const normalizedArgs = args[0] === "watch" ? ["--watch", ...args.slice(1)] : args;
+	const options: StatusCommandOptions = {
+		json: false,
+		watch: false,
+		intervalMs: resolveDefaultStatusIntervalMs(),
+		baseUrl: resolveDefaultBaseUrl(),
+		model: resolveDefaultModel(),
+		apiKey: process.env.NOVA_LOCAL_API_KEY || process.env.OPENAI_API_KEY,
+		backendHint: resolveDefaultBackendHint(),
+		timeoutMs: resolveDefaultTimeoutMs(),
+		help: false,
+	};
+
+	for (let i = 0; i < normalizedArgs.length; i++) {
+		const arg = normalizedArgs[i];
+		if (arg === "--json") {
+			options.json = true;
+			continue;
+		}
+		if (arg === "--watch") {
+			options.watch = true;
+			continue;
+		}
+		if (arg === "--interval-ms" && i + 1 < normalizedArgs.length) {
+			const parsed = Number.parseInt(normalizedArgs[++i], 10);
+			if (Number.isFinite(parsed) && parsed >= 250) {
+				options.intervalMs = parsed;
+			} else {
+				options.invalidOption = "--interval-ms";
+			}
+			continue;
+		}
+		if (arg === "--base-url" && i + 1 < normalizedArgs.length) {
+			options.baseUrl = normalizedArgs[++i];
+			continue;
+		}
+		if (arg === "--model" && i + 1 < normalizedArgs.length) {
+			options.model = normalizedArgs[++i];
+			continue;
+		}
+		if (arg === "--api-key" && i + 1 < normalizedArgs.length) {
+			options.apiKey = normalizedArgs[++i];
+			continue;
+		}
+		if (arg === "--backend" && i + 1 < normalizedArgs.length) {
+			options.backendHint = normalizedArgs[++i];
+			continue;
+		}
+		if (arg === "--timeout-ms" && i + 1 < normalizedArgs.length) {
+			const parsed = Number.parseInt(normalizedArgs[++i], 10);
+			if (Number.isFinite(parsed) && parsed > 0) {
+				options.timeoutMs = parsed;
+			} else {
+				options.invalidOption = "--timeout-ms";
+			}
+			continue;
+		}
+		if (arg === "-h" || arg === "--help") {
+			options.help = true;
+			continue;
+		}
+		options.invalidOption = arg;
+	}
+
+	return options;
+}
+
 function renderBoolean(flag: boolean): string {
 	return flag ? chalk.green("yes") : chalk.red("no");
 }
@@ -454,7 +596,230 @@ function printBenchDiff(diff: ReturnType<typeof diffBenchmarkReports>): void {
 	}
 }
 
+async function collectStatusSnapshot(options: StatusCommandOptions): Promise<NovaStatusSnapshot> {
+	const report = await probeLocalCapabilities({
+		baseUrl: options.baseUrl,
+		model: options.model,
+		apiKey: options.apiKey,
+		backendHint: options.backendHint,
+		timeoutMs: options.timeoutMs,
+	});
+
+	const diagnosticProbes: DiagnosticProbeResult[] = [
+		{
+			id: "connectivity",
+			scope: "internal",
+			ok: report.connectivity,
+			severity: "red",
+			message: report.connectivity ? "Connectivity probe passed." : "Connectivity probe failed.",
+			backend: options.backendHint,
+		},
+		{
+			id: "streaming",
+			scope: "internal",
+			ok: report.streaming,
+			severity: "yellow",
+			message: report.streaming ? "Streaming probe passed." : "Streaming probe failed.",
+			backend: options.backendHint,
+		},
+		{
+			id: "tool-calling",
+			scope: "internal",
+			ok: report.toolCalling,
+			severity: "red",
+			message: report.toolCalling ? "Tool-calling probe passed." : "Tool-calling probe failed.",
+			backend: options.backendHint,
+		},
+		{
+			id: "json-schema",
+			scope: "internal",
+			ok: report.jsonSchema,
+			severity: "yellow",
+			message: report.jsonSchema ? "JSON schema probe passed." : "JSON schema probe failed.",
+			backend: options.backendHint,
+		},
+		{
+			id: "system-role",
+			scope: "extended",
+			ok: report.systemRole,
+			severity: "yellow",
+			message: report.systemRole ? "System role probe passed." : "System role probe failed.",
+			backend: options.backendHint,
+		},
+		{
+			id: "developer-role",
+			scope: "extended",
+			ok: report.developerRole,
+			severity: "yellow",
+			message: report.developerRole ? "Developer role probe passed." : "Developer role probe failed.",
+			backend: options.backendHint,
+		},
+		{
+			id: "reasoning-parser",
+			scope: "extended",
+			ok: report.reasoningParser,
+			severity: "yellow",
+			message: report.reasoningParser ? "Reasoning parser probe passed." : "Reasoning parser probe failed.",
+			backend: options.backendHint,
+		},
+		{
+			id: "tool-parser",
+			scope: "extended",
+			ok: report.toolParser,
+			severity: "yellow",
+			message: report.toolParser ? "Tool parser probe passed." : "Tool parser probe failed.",
+			backend: options.backendHint,
+		},
+	];
+	const diagnostics = mapDiagnosticProbesToStatus(diagnosticProbes);
+
+	const heartbeatRunning = parseOptionalBooleanFlag(process.env.NOVA_STATUS_HEARTBEAT_RUNNING);
+	const cronRunning = parseOptionalBooleanFlag(process.env.NOVA_STATUS_CRON_RUNNING);
+	const schedulerStatus: SchedulerStatus =
+		heartbeatRunning === undefined && cronRunning === undefined
+			? {
+					severity: "unknown",
+					heartbeatRunning: false,
+					cronRunning: false,
+					missedRuns: 0,
+					message:
+						"No scheduler signal source configured. Set NOVA_STATUS_HEARTBEAT_RUNNING/NOVA_STATUS_CRON_RUNNING for explicit scheduler status.",
+				}
+			: mapSchedulerSignalsToStatus({
+					heartbeatConfigured: true,
+					heartbeatRunning: heartbeatRunning ?? false,
+					cronConfigured: true,
+					cronRunning: cronRunning ?? false,
+					missedRuns: 0,
+				}).status;
+	const schedulerCollector = createStaticCollector("scheduler", schedulerStatus);
+
+	const dependency = mapDependencySignalsToStatus({
+		orchestrationCore: "green",
+		workflowSkills: "green",
+		memoryCore: "green",
+		connectorSkills: "green",
+		message: "Dependency health checks are running in optimistic mode for CLI status.",
+	});
+
+	const snapshot = await collectNovaStatus({
+		timeoutMs: options.timeoutMs,
+		notes: [
+			`Backend hint: ${options.backendHint}`,
+			`Model: ${options.model}`,
+			...(report.recommendedProfile ? [`Recommended profile: ${report.recommendedProfile}`] : []),
+			...report.notes,
+		],
+		issues: [
+			...report.warnings.map((warning) => ({
+				code: "collector_failed",
+				domain: "diagnostics" as const,
+				severity: "yellow" as const,
+				message: warning,
+				source: options.backendHint,
+			})),
+			...diagnostics.issues,
+			...dependency.issues,
+		],
+		collectors: {
+			agent: createStaticCollector("agent", {
+				severity: "green",
+				state: "idle",
+				message: "Status probe mode.",
+			}),
+			scheduler: schedulerCollector,
+			diagnostics: createStaticCollector("diagnostics", diagnostics.status),
+			dependencies: createStaticCollector("dependencies", dependency.status),
+		},
+	});
+
+	return snapshot;
+}
+
+function printStatusSnapshot(snapshot: NovaStatusSnapshot, json: boolean): void {
+	if (json) {
+		console.log(renderNovaStatusJson(snapshot));
+		return;
+	}
+	console.log(renderNovaStatusText(snapshot, { mode: "verbose" }));
+}
+
+async function runStatusWatch(options: StatusCommandOptions): Promise<void> {
+	const contract = createNovaStatusWatchContract({
+		intervalMs: options.intervalMs,
+		immediate: true,
+		maxConsecutiveFailures: 6,
+		maxBackoffMultiplier: 8,
+	});
+
+	let failures = 0;
+	let running = true;
+	const stop = (): void => {
+		running = false;
+	};
+	process.once("SIGINT", stop);
+	process.once("SIGTERM", stop);
+
+	while (running) {
+		const refreshedAt = new Date();
+		try {
+			const snapshot = await collectStatusSnapshot(options);
+			if (process.stdout.isTTY) {
+				process.stdout.write("\x1Bc");
+			}
+			printStatusSnapshot(snapshot, options.json);
+			failures = 0;
+		} catch (error) {
+			failures += 1;
+			const message = error instanceof Error ? error.message : String(error);
+			if (process.stdout.isTTY) {
+				process.stdout.write("\x1Bc");
+			}
+			console.error(chalk.red(`status watch update failed: ${message}`));
+		}
+
+		const delay = computeRefreshDelay(contract, failures);
+		const nextAt = refreshedAt.getTime() + delay;
+		while (running && Date.now() < nextAt) {
+			await new Promise<void>((resolve) => {
+				setTimeout(resolve, 100);
+			});
+		}
+	}
+}
+
 export async function handleLocalCommand(args: string[]): Promise<boolean> {
+	if (args[0] === "status") {
+		const statusOptions = parseStatusCommandOptions(args.slice(1));
+		if (statusOptions.help) {
+			printStatusHelp();
+			return true;
+		}
+		if (statusOptions.invalidOption) {
+			console.error(chalk.red(`Invalid option: ${statusOptions.invalidOption}`));
+			console.error(chalk.dim(`Usage: ${APP_NAME} status [options]`));
+			process.exitCode = 1;
+			return true;
+		}
+		try {
+			if (statusOptions.watch) {
+				await runStatusWatch(statusOptions);
+				return true;
+			}
+			const snapshot = await collectStatusSnapshot(statusOptions);
+			printStatusSnapshot(snapshot, statusOptions.json);
+			if (snapshot.overall === "red") {
+				process.exitCode = 1;
+			}
+			return true;
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "Unknown status command error";
+			console.error(chalk.red(`status failed: ${message}`));
+			process.exitCode = 1;
+			return true;
+		}
+	}
+
 	if (args[0] !== "local") {
 		return false;
 	}
@@ -632,7 +997,7 @@ export async function handleLocalCommand(args: string[]): Promise<boolean> {
 	console.error(chalk.red(`Unknown local subcommand: ${subcommand ?? "(missing)"}`));
 	console.error(
 		chalk.dim(
-			`Usage: ${APP_NAME} local doctor [options] | local inspect [options] | local bench run [options] | local bench diff <older> <newer> [options]`,
+			`Usage: ${APP_NAME} status [options] | local doctor [options] | local inspect [options] | local bench run [options] | local bench diff <older> <newer> [options]`,
 		),
 	);
 	process.exitCode = 1;

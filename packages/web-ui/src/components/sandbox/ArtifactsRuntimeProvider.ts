@@ -1,4 +1,4 @@
-import type { AgentMessage } from "@nova-ai/nova-agent-core";
+import type { AgentMessage } from "@topaca/nova-agent-core";
 import {
 	ARTIFACTS_RUNTIME_PROVIDER_DESCRIPTION_RO,
 	ARTIFACTS_RUNTIME_PROVIDER_DESCRIPTION_RW,

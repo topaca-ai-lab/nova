@@ -1,6 +1,6 @@
 import "@mariozechner/mini-lit/dist/ThemeToggle.js";
-import { Agent, type AgentMessage } from "@nova-ai/nova-agent-core";
-import { getModel } from "@nova-ai/nova-ai";
+import { Agent, type AgentMessage } from "@topaca/nova-agent-core";
+import { getModel } from "@topaca/nova-ai";
 import {
 	type AgentState,
 	ApiKeyPromptDialog,
@@ -18,7 +18,7 @@ import {
 	SettingsDialog,
 	SettingsStore,
 	setAppStorage,
-} from "@nova-ai/nova-web-ui";
+} from "@topaca/nova-web-ui";
 import { html, render } from "lit";
 import { Bell, History, Plus, Settings } from "lucide";
 import "./app.css";

@@ -1,4 +1,4 @@
-import type { Model } from "@nova-ai/nova-ai";
+import type { Model } from "@topaca/nova-ai";
 import {
 	Container,
 	type Focusable,
@@ -9,7 +9,7 @@ import {
 	matchesKey,
 	Spacer,
 	Text,
-} from "@nova-ai/nova-tui";
+} from "@topaca/nova-tui";
 import { theme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
 import { keyText } from "./keybinding-hints.js";
@@ -107,7 +107,7 @@ export class ScopedModelsSelectorComponent extends Container implements Focusabl
 	private listContainer: Container;
 	private footerText: Text;
 	private callbacks: ModelsCallbacks;
-	private maxVisible = 15;
+	private maxVisible = 8;
 	private isDirty = false;
 
 	constructor(config: ModelsConfig, callbacks: ModelsCallbacks) {

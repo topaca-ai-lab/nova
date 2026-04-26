@@ -5,9 +5,9 @@
  * and after compaction the session is reloaded.
  */
 
-import type { AgentMessage, ThinkingLevel } from "@nova-ai/nova-agent-core";
-import type { AssistantMessage, Model, Usage } from "@nova-ai/nova-ai";
-import { completeSimple } from "@nova-ai/nova-ai";
+import type { AgentMessage, ThinkingLevel } from "@topaca/nova-agent-core";
+import type { AssistantMessage, Model, Usage } from "@topaca/nova-ai";
+import { completeSimple } from "@topaca/nova-ai";
 import {
 	convertToLlm,
 	createBranchSummaryMessage,

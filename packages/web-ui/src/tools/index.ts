@@ -1,4 +1,4 @@
-import type { ToolResultMessage } from "@nova-ai/nova-ai";
+import type { ToolResultMessage } from "@topaca/nova-ai";
 import "./javascript-repl.js"; // Auto-registers the renderer
 import "./extract-document.js"; // Auto-registers the renderer
 import { getToolRenderer, registerToolRenderer } from "./renderer-registry.js";

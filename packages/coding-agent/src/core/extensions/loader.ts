@@ -10,11 +10,11 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createJiti } from "@mariozechner/jiti";
-import * as _bundledPiAgentCore from "@nova-ai/nova-agent-core";
-import * as _bundledPiAi from "@nova-ai/nova-ai";
-import * as _bundledPiAiOauth from "@nova-ai/nova-ai/oauth";
-import type { KeyId } from "@nova-ai/nova-tui";
-import * as _bundledPiTui from "@nova-ai/nova-tui";
+import * as _bundledPiAgentCore from "@topaca/nova-agent-core";
+import * as _bundledPiAi from "@topaca/nova-ai";
+import * as _bundledPiAiOauth from "@topaca/nova-ai/oauth";
+import type { KeyId } from "@topaca/nova-tui";
+import * as _bundledPiTui from "@topaca/nova-tui";
 // Static imports of packages that extensions may use.
 // These MUST be static so Bun bundles them into the compiled binary.
 // The virtualModules option then makes them available to extensions.
@@ -23,7 +23,7 @@ import * as _bundledTypeboxCompile from "typebox/compile";
 import * as _bundledTypeboxValue from "typebox/value";
 import { CONFIG_DIR_NAME, getAgentDir, isBunBinary } from "../../config.js";
 // NOTE: This import works because loader.ts exports are NOT re-exported from index.ts,
-// avoiding a circular dependency. Extensions can import from @nova-ai/nova-coding-agent.
+// avoiding a circular dependency. Extensions can import from @topaca/nova-coding-agent.
 import * as _bundledPiCodingAgent from "../../index.js";
 import { createEventBus, type EventBus } from "../event-bus.js";
 import type { ExecOptions } from "../exec.js";
@@ -49,11 +49,11 @@ const VIRTUAL_MODULES: Record<string, unknown> = {
 	"@sinclair/typebox": _bundledTypebox,
 	"@sinclair/typebox/compile": _bundledTypeboxCompile,
 	"@sinclair/typebox/value": _bundledTypeboxValue,
-	"@nova-ai/nova-agent-core": _bundledPiAgentCore,
-	"@nova-ai/nova-tui": _bundledPiTui,
-	"@nova-ai/nova-ai": _bundledPiAi,
-	"@nova-ai/nova-ai/oauth": _bundledPiAiOauth,
-	"@nova-ai/nova-coding-agent": _bundledPiCodingAgent,
+	"@topaca/nova-agent-core": _bundledPiAgentCore,
+	"@topaca/nova-tui": _bundledPiTui,
+	"@topaca/nova-ai": _bundledPiAi,
+	"@topaca/nova-ai/oauth": _bundledPiAiOauth,
+	"@topaca/nova-coding-agent": _bundledPiCodingAgent,
 };
 
 const require = createRequire(import.meta.url);
@@ -84,11 +84,11 @@ function getAliases(): Record<string, string> {
 	};
 
 	_aliases = {
-		"@nova-ai/nova-coding-agent": packageIndex,
-		"@nova-ai/nova-agent-core": resolveWorkspaceOrImport("agent/dist/index.js", "@nova-ai/nova-agent-core"),
-		"@nova-ai/nova-tui": resolveWorkspaceOrImport("tui/dist/index.js", "@nova-ai/nova-tui"),
-		"@nova-ai/nova-ai": resolveWorkspaceOrImport("ai/dist/index.js", "@nova-ai/nova-ai"),
-		"@nova-ai/nova-ai/oauth": resolveWorkspaceOrImport("ai/dist/oauth.js", "@nova-ai/nova-ai/oauth"),
+		"@topaca/nova-coding-agent": packageIndex,
+		"@topaca/nova-agent-core": resolveWorkspaceOrImport("agent/dist/index.js", "@topaca/nova-agent-core"),
+		"@topaca/nova-tui": resolveWorkspaceOrImport("tui/dist/index.js", "@topaca/nova-tui"),
+		"@topaca/nova-ai": resolveWorkspaceOrImport("ai/dist/index.js", "@topaca/nova-ai"),
+		"@topaca/nova-ai/oauth": resolveWorkspaceOrImport("ai/dist/oauth.js", "@topaca/nova-ai/oauth"),
 		typebox: typeboxEntry,
 		"typebox/compile": typeboxCompileEntry,
 		"typebox/value": typeboxValueEntry,

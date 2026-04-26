@@ -68,7 +68,7 @@ export {
 	type WriteToolOptions,
 } from "./write.js";
 
-import type { AgentTool } from "@nova-ai/nova-agent-core";
+import type { AgentTool } from "@topaca/nova-agent-core";
 import type { ToolDefinition } from "../extensions/types.js";
 import { type BashToolOptions, createBashTool, createBashToolDefinition } from "./bash.js";
 import { createEditTool, createEditToolDefinition, type EditToolOptions } from "./edit.js";

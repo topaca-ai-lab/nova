@@ -1,6 +1,6 @@
 {
-	"name": "@nova-ai/nova-coding-agent",
-	"version": "0.69.0",
+	"name": "@topaca/nova-coding-agent",
+	"version": "0.70.2",
 	"description": "Coding agent CLI with read, bash, edit, write tools and session management",
 	"type": "module",
 	"novaConfig": {
@@ -40,9 +40,10 @@
 	},
 	"dependencies": {
 		"@mariozechner/jiti": "^2.6.2",
-		"@nova-ai/nova-agent-core": "^0.69.0",
-		"@nova-ai/nova-ai": "^0.69.0",
-		"@nova-ai/nova-tui": "^0.69.0",
+		"@topaca/nova-agent-core": "^0.70.2",
+		"@topaca/nova-ai": "^0.70.2",
+		"@topaca/nova-status": "^0.0.1",
+		"@topaca/nova-tui": "^0.70.2",
 		"@silvia-odwyer/photon-node": "^0.3.4",
 		"chalk": "^5.5.0",
 		"cli-highlight": "^2.1.11",

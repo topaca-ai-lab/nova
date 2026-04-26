@@ -1,4 +1,4 @@
-import type { Model } from "@nova-ai/nova-ai";
+import type { Model } from "@topaca/nova-ai";
 import { Store } from "../store.js";
 import type { StoreConfig } from "../types.js";
 

@@ -10,8 +10,8 @@
  * - createMomSettingsManager: Creates a SettingsManager backed by workspace settings.json
  */
 
-import type { UserMessage } from "@nova-ai/nova-ai";
-import { type SessionManager, type SessionMessageEntry, SettingsManager } from "@nova-ai/nova-coding-agent";
+import type { UserMessage } from "@topaca/nova-ai";
+import { type SessionManager, type SessionMessageEntry, SettingsManager } from "@topaca/nova-coding-agent";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 

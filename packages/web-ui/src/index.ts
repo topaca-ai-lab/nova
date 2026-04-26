@@ -1,7 +1,7 @@
 // Main chat interface
 
-export type { Agent, AgentMessage, AgentState, ThinkingLevel } from "@nova-ai/nova-agent-core";
-export type { Model } from "@nova-ai/nova-ai";
+export type { Agent, AgentMessage, AgentState, ThinkingLevel } from "@topaca/nova-agent-core";
+export type { Model } from "@topaca/nova-ai";
 export { ChatPanel } from "./ChatPanel.js";
 // Components
 export { AgentInterface } from "./components/AgentInterface.js";

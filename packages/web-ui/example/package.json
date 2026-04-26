@@ -1,6 +1,6 @@
 {
   "name": "nova-web-ui-example",
-  "version": "0.69.0",
+  "version": "0.70.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@mariozechner/mini-lit": "^0.2.0",
-    "@nova-ai/nova-ai": "file:../../ai",
-    "@nova-ai/nova-web-ui": "file:../",
+    "@topaca/nova-ai": "file:../../ai",
+    "@topaca/nova-web-ui": "file:../",
     "@tailwindcss/vite": "^4.1.17",
     "lit": "^3.3.1",
     "lucide": "^0.544.0"

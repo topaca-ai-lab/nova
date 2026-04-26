@@ -7,7 +7,7 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage } from "@nova-ai/nova-agent-core";
+import type { AgentMessage } from "@topaca/nova-agent-core";
 import {
 	type AssistantMessage,
 	getLocalRuntimeProfile,
@@ -15,7 +15,7 @@ import {
 	type Message,
 	type Model,
 	type OAuthProviderId,
-} from "@nova-ai/nova-ai";
+} from "@topaca/nova-ai";
 import type {
 	AutocompleteItem,
 	AutocompleteProvider,
@@ -27,7 +27,7 @@ import type {
 	OverlayHandle,
 	OverlayOptions,
 	SlashCommand,
-} from "@nova-ai/nova-tui";
+} from "@topaca/nova-tui";
 import {
 	CombinedAutocompleteProvider,
 	type Component,
@@ -44,7 +44,7 @@ import {
 	TruncatedText,
 	TUI,
 	visibleWidth,
-} from "@nova-ai/nova-tui";
+} from "@topaca/nova-tui";
 import { spawn, spawnSync } from "child_process";
 import {
 	APP_NAME,
@@ -52,6 +52,7 @@ import {
 	getAgentDir,
 	getAuthPath,
 	getDebugLogPath,
+	getDocsPath,
 	getModelsPath,
 	getShareViewerUrl,
 	getUpdateInstruction,
@@ -162,7 +163,7 @@ type CompactionQueuedMessage = {
 };
 
 const ANTHROPIC_SUBSCRIPTION_AUTH_WARNING =
-	"Anthropic subscription auth is active. Third-party usage now draws from extra usage and is billed per token, not your Claude plan limits. Manage extra usage at https://claude.ai/settings/usage.";
+	"Anthropic subscription auth is active. Third-party harness usage draws from extra usage and is billed per token, not your Claude plan limits. Manage extra usage at https://claude.ai/settings/usage.";
 
 function isAnthropicSubscriptionAuthKey(apiKey: string | undefined): boolean {
 	return typeof apiKey === "string" && apiKey.startsWith("sk-ant-oat");
@@ -176,7 +177,10 @@ function hasDefaultModelProvider(providerId: string): providerId is keyof typeof
 	return providerId in defaultModelPerProvider;
 }
 
-const API_KEY_PROVIDER_NAMES: Record<string, string> = {
+const BEDROCK_PROVIDER_ID = "amazon-bedrock";
+
+const API_KEY_LOGIN_PROVIDERS: Record<string, string> = {
+	anthropic: "Anthropic",
 	"azure-openai-responses": "Azure OpenAI Responses",
 	cerebras: "Cerebras",
 	fireworks: "Fireworks",
@@ -202,8 +206,18 @@ const LOCAL_LOGIN_OPTION_LABEL = "Use local LLM";
 const LOCAL_PROVIDER_ID = "local-openai";
 const DEFAULT_LOCAL_PROFILE_ID = "ollama_openai_compat";
 
-function getApiKeyProviderDisplayName(providerId: string): string {
-	return API_KEY_PROVIDER_NAMES[providerId] ?? providerId;
+export function isApiKeyLoginProvider(providerId: string, oauthProviderIds: ReadonlySet<string>): boolean {
+	if (API_KEY_LOGIN_PROVIDER_BLOCKLIST.has(providerId)) {
+		return false;
+	}
+	if (API_KEY_LOGIN_PROVIDERS[providerId]) {
+		return true;
+	}
+	return !oauthProviderIds.has(providerId) && providerId !== BEDROCK_PROVIDER_ID;
+}
+
+export function getApiKeyProviderDisplayName(providerId: string): string {
+	return API_KEY_LOGIN_PROVIDERS[providerId] ?? providerId;
 }
 
 type LocalModelsConfig = {
@@ -290,9 +304,6 @@ export class InteractiveMode {
 
 	// Tool execution tracking: toolCallId -> component
 	private pendingTools = new Map<string, ToolExecutionComponent>();
-
-	// Track first user message to avoid leading spacer at top of chat
-	private isFirstUserMessage = true;
 
 	// Tool output expansion state
 	private toolOutputExpanded = false;
@@ -792,7 +803,7 @@ export class InteractiveMode {
 		if (process.env.NOVA_SKIP_VERSION_CHECK || process.env.NOVA_OFFLINE) return undefined;
 
 		try {
-			const response = await fetch("https://registry.npmjs.org/@nova-ai/nova-coding-agent/latest", {
+			const response = await fetch("https://registry.npmjs.org/@topaca/nova-coding-agent/latest", {
 				signal: AbortSignal.timeout(10000),
 			});
 			if (!response.ok) return undefined;
@@ -1570,7 +1581,7 @@ export class InteractiveMode {
 
 		const extensionRunner = this.session.extensionRunner;
 		this.setupExtensionShortcuts(extensionRunner);
-		this.showLoadedResources({ force: false });
+		this.showLoadedResources({ force: false, showDiagnosticsWhenQuiet: true });
 		this.showStartupNoticesIfNeeded();
 	}
 
@@ -3031,7 +3042,7 @@ export class InteractiveMode {
 			case "user": {
 				const textContent = this.getUserMessageText(message);
 				if (textContent) {
-					if (!this.isFirstUserMessage) {
+					if (this.chatContainer.children.length > 0) {
 						this.chatContainer.addChild(new Spacer(1));
 					}
 					const skillBlock = parseSkillBlock(textContent);
@@ -3055,7 +3066,6 @@ export class InteractiveMode {
 						const userComponent = new UserMessageComponent(textContent, this.getMarkdownThemeWithSettings());
 						this.chatContainer.addChild(userComponent);
 					}
-					this.isFirstUserMessage = false;
 					if (options?.populateHistory) {
 						this.editor.addToHistory?.(textContent);
 					}
@@ -3093,7 +3103,6 @@ export class InteractiveMode {
 		options: { updateFooter?: boolean; populateHistory?: boolean } = {},
 	): void {
 		this.pendingTools.clear();
-		this.isFirstUserMessage = true;
 
 		if (options.updateFooter) {
 			this.footer.invalidate();
@@ -3209,7 +3218,8 @@ export class InteractiveMode {
 
 	/**
 	 * Gracefully shutdown the agent.
-	 * Emits shutdown event to extensions, then exits.
+	 * Stops the TUI before emitting shutdown events so extension UI cleanup cannot
+	 * repaint the final frame while the process is exiting.
 	 */
 	private isShuttingDown = false;
 
@@ -3217,17 +3227,13 @@ export class InteractiveMode {
 		if (this.isShuttingDown) return;
 		this.isShuttingDown = true;
 		this.unregisterSignalHandlers();
-		await this.runtimeHost.dispose();
-
-		// Wait for any pending renders to complete
-		// requestRender() uses process.nextTick(), so we wait one tick
-		await new Promise((resolve) => process.nextTick(resolve));
 
 		// Drain any in-flight Kitty key release events before stopping.
 		// This prevents escape sequences from leaking to the parent shell over slow SSH.
 		await this.ui.terminal.drainInput(1000);
 
 		this.stop();
+		await this.runtimeHost.dispose();
 		process.exit(0);
 	}
 
@@ -3487,7 +3493,7 @@ export class InteractiveMode {
 	}
 
 	showNewVersionNotification(newVersion: string): void {
-		const action = theme.fg("accent", getUpdateInstruction("@nova-ai/nova-coding-agent"));
+		const action = theme.fg("accent", getUpdateInstruction("@topaca/nova-coding-agent"));
 		const updateInstruction = theme.fg("muted", `New version ${newVersion} is available. `) + action;
 		const changelogUrl = theme.fg(
 			"accent",
@@ -3980,7 +3986,7 @@ export class InteractiveMode {
 				},
 				() => {
 					done();
-					this.showLoginAuthTypeSelector();
+					this.ui.requestRender();
 				},
 				initialSearchInput,
 			);
@@ -4345,7 +4351,7 @@ export class InteractiveMode {
 
 		const modelProviders = new Set(this.session.modelRegistry.getAll().map((model) => model.provider));
 		for (const providerId of modelProviders) {
-			if (oauthProviderIds.has(providerId) || API_KEY_LOGIN_PROVIDER_BLOCKLIST.has(providerId)) {
+			if (!isApiKeyLoginProvider(providerId, oauthProviderIds)) {
 				continue;
 			}
 			options.push({
@@ -4431,6 +4437,8 @@ export class InteractiveMode {
 
 					if (providerOption.authType === "oauth") {
 						await this.showLoginDialog(providerOption.id, providerOption.name);
+					} else if (providerOption.id === BEDROCK_PROVIDER_ID) {
+						this.showBedrockSetupDialog(providerOption.id, providerOption.name);
 					} else {
 						await this.showApiKeyLoginDialog(providerOption.id, providerOption.name);
 					}
@@ -4442,6 +4450,34 @@ export class InteractiveMode {
 			);
 			return { component: selector, focus: selector };
 		});
+	}
+
+	private showBedrockSetupDialog(providerId: string, providerName: string): void {
+		const restoreEditor = () => {
+			this.editorContainer.clear();
+			this.editorContainer.addChild(this.editor);
+			this.ui.setFocus(this.editor);
+			this.ui.requestRender();
+		};
+
+		const dialog = new LoginDialogComponent(
+			this.ui,
+			providerId,
+			() => restoreEditor(),
+			providerName,
+			"Amazon Bedrock setup",
+		);
+		dialog.showInfo([
+			theme.fg("text", "Amazon Bedrock uses AWS credentials instead of a single API key."),
+			theme.fg("text", "Configure an AWS profile, IAM keys, bearer token, or role-based credentials."),
+			theme.fg("muted", "See:"),
+			theme.fg("accent", `  ${path.join(getDocsPath(), "providers.md")}`),
+		]);
+
+		this.editorContainer.clear();
+		this.editorContainer.addChild(dialog);
+		this.ui.setFocus(dialog);
+		this.ui.requestRender();
 	}
 
 	private async showOAuthSelector(mode: "login" | "logout"): Promise<void> {

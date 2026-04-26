@@ -6,7 +6,7 @@ import {
 	type SlotSelection,
 	type VisibleToolSlot,
 	validateSlotSelection,
-} from "@nova-ai/nova-agent-core";
+} from "@topaca/nova-agent-core";
 import {
 	inferSlotInvocationFromCodingAgentTool,
 	inferSlotSelectionFromCodingAgentTool,

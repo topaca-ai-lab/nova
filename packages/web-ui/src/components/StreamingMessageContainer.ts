@@ -1,5 +1,5 @@
-import type { AgentMessage, AgentTool } from "@nova-ai/nova-agent-core";
-import type { ToolResultMessage } from "@nova-ai/nova-ai";
+import type { AgentMessage, AgentTool } from "@topaca/nova-agent-core";
+import type { ToolResultMessage } from "@topaca/nova-ai";
 import { html, LitElement } from "lit";
 import { property, state } from "lit/decorators.js";
 

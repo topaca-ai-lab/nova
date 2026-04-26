@@ -1,4 +1,4 @@
-import type { ImageContent } from "@nova-ai/nova-ai";
+import type { ImageContent } from "@topaca/nova-ai";
 import type { Args } from "./args.js";
 
 export interface InitialMessageInput {
