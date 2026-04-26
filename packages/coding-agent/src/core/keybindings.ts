@@ -5,7 +5,7 @@ import {
 	type KeyId,
 	TUI_KEYBINDINGS,
 	KeybindingsManager as TuiKeybindingsManager,
-} from "@nova-ai/nova-tui";
+} from "@topaca/nova-tui";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getAgentDir } from "../config.js";
@@ -56,7 +56,7 @@ export interface AppKeybindings {
 
 export type AppKeybinding = keyof AppKeybindings;
 
-declare module "@nova-ai/nova-tui" {
+declare module "@topaca/nova-tui" {
 	interface Keybindings extends AppKeybindings {}
 }
 

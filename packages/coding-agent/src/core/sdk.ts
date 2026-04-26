@@ -4,10 +4,11 @@ import {
 	type AgentMessage,
 	type LocalDeterministicRuntimeConfig,
 	type ThinkingLevel,
-} from "@nova-ai/nova-agent-core";
-import { type Message, type Model, streamSimple } from "@nova-ai/nova-ai";
-import { getAgentDir, getDocsPath } from "../config.js";
+} from "@topaca/nova-agent-core";
+import { type Message, type Model, streamSimple } from "@topaca/nova-ai";
+import { getAgentDir } from "../config.js";
 import { AgentSession } from "./agent-session.js";
+import { formatNoModelsAvailableMessage } from "./auth-guidance.js";
 import { AuthStorage } from "./auth-storage.js";
 import { DEFAULT_THINKING_LEVEL } from "./defaults.js";
 import type { ExtensionRunner, LoadExtensionsResult, SessionStartEvent, ToolDefinition } from "./extensions/index.js";
@@ -53,10 +54,18 @@ export interface CreateAgentSessionOptions {
 	scopedModels?: Array<{ model: Model<any>; thinkingLevel?: ThinkingLevel }>;
 
 	/**
+	 * Optional default tool suppression mode when no explicit allowlist is provided.
+	 *
+	 * - "all": start with no tools enabled
+	 * - "builtin": disable the default built-in tools (read, bash, edit, write)
+	 *   but keep extension/custom tools enabled
+	 */
+	noTools?: "all" | "builtin";
+	/**
 	 * Optional allowlist of tool names.
 	 *
 	 * When omitted, nova enables the default built-in tools (read, bash, edit, write)
-	 * and leaves extension/custom tools enabled.
+	 * and leaves extension/custom tools enabled unless `noTools` changes that default.
 	 * When provided, only the listed tool names are enabled.
 	 */
 	tools?: string[];
@@ -170,7 +179,7 @@ function getOpenRouterAttributionHeaders(
  * const { session } = await createAgentSession();
  *
  * // With explicit model
- * import { getModel } from '@nova-ai/nova-ai';
+ * import { getModel } from '@topaca/nova-ai';
  * const { session } = await createAgentSession({
  *   model: getModel('anthropic', 'claude-opus-4-5'),
  *   thinkingLevel: 'high',
@@ -247,7 +256,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		});
 		model = result.model;
 		if (!model) {
-			modelFallbackMessage = `No models available. Use /login or set an API key environment variable. See ${join(getDocsPath(), "providers.md")}. Then use /model to select a model.`;
+			modelFallbackMessage = formatNoModelsAvailableMessage();
 		} else if (modelFallbackMessage) {
 			modelFallbackMessage += `. Using ${model.provider}/${model.id}`;
 		}
@@ -273,7 +282,12 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 	}
 
 	const defaultActiveToolNames: ToolName[] = ["read", "bash", "edit", "write"];
-	const initialActiveToolNames: string[] = options.tools ? [...options.tools] : defaultActiveToolNames;
+	const allowedToolNames = options.tools ?? (options.noTools === "all" ? [] : undefined);
+	const initialActiveToolNames: string[] = options.tools
+		? [...options.tools]
+		: options.noTools
+			? []
+			: defaultActiveToolNames;
 
 	let agent: Agent;
 
@@ -329,10 +343,14 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 			if (!auth.ok) {
 				throw new Error(auth.error);
 			}
+			const providerRetrySettings = settingsManager.getProviderRetrySettings();
 			const openRouterAttributionHeaders = getOpenRouterAttributionHeaders(model, settingsManager);
 			return streamSimple(model, context, {
 				...options,
 				apiKey: auth.apiKey,
+				timeoutMs: options?.timeoutMs ?? providerRetrySettings.timeoutMs,
+				maxRetries: options?.maxRetries ?? providerRetrySettings.maxRetries,
+				maxRetryDelayMs: options?.maxRetryDelayMs ?? providerRetrySettings.maxRetryDelayMs,
 				headers:
 					openRouterAttributionHeaders || auth.headers || options?.headers
 						? { ...openRouterAttributionHeaders, ...auth.headers, ...options?.headers }
@@ -367,7 +385,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		followUpMode: settingsManager.getFollowUpMode(),
 		transport: settingsManager.getTransport(),
 		thinkingBudgets: settingsManager.getThinkingBudgets(),
-		maxRetryDelayMs: settingsManager.getRetrySettings().maxDelayMs,
+		maxRetryDelayMs: settingsManager.getProviderRetrySettings().maxRetryDelayMs,
 		localDeterministic: resolveLocalDeterministicRuntimeConfig(),
 	});
 
@@ -395,7 +413,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		customTools: options.customTools,
 		modelRegistry,
 		initialActiveToolNames,
-		allowedToolNames: options.tools,
+		allowedToolNames,
 		extensionRunnerRef,
 		sessionStartEvent: options.sessionStartEvent,
 	});

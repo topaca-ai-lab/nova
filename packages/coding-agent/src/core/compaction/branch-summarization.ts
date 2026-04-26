@@ -5,9 +5,9 @@
  * a summary of the branch being left so context isn't lost.
  */
 
-import type { AgentMessage } from "@nova-ai/nova-agent-core";
-import type { Model } from "@nova-ai/nova-ai";
-import { completeSimple } from "@nova-ai/nova-ai";
+import type { AgentMessage } from "@topaca/nova-agent-core";
+import type { Model } from "@topaca/nova-ai";
+import { completeSimple } from "@topaca/nova-ai";
 import {
 	convertToLlm,
 	createBranchSummaryMessage,

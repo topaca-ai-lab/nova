@@ -1,4 +1,4 @@
-import type { ContextPolicy } from "@nova-ai/nova-ai";
+import type { ContextPolicy } from "@topaca/nova-ai";
 
 export type LocalCompactionTriggerReason =
 	| "none"

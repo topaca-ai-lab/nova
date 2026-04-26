@@ -5,8 +5,8 @@
  * and converting the ANSI output to HTML.
  */
 
-import type { ImageContent, TextContent } from "@nova-ai/nova-ai";
-import type { Component } from "@nova-ai/nova-tui";
+import type { ImageContent, TextContent } from "@topaca/nova-ai";
+import type { Component } from "@topaca/nova-tui";
 import type { Theme } from "../../modes/interactive/theme/theme.js";
 import type { ToolDefinition, ToolRenderContext } from "../extensions/types.js";
 import { ansiLinesToHtml } from "./ansi-to-html.js";

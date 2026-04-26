@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { probeLocalCapabilities } from "@nova-ai/nova-ai";
+import { probeLocalCapabilities } from "@topaca/nova-ai";
 import { executeBenchmarkAction } from "./benchmark-action-executor.js";
 import { buildBenchmarkReport } from "./benchmark-report.js";
 import type { BenchmarkReport, BenchmarkSlot, BenchmarkTask, BenchmarkTaskResult } from "./benchmark-types.js";

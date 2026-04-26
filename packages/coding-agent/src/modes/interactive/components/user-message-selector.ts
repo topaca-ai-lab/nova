@@ -1,4 +1,4 @@
-import { type Component, Container, getKeybindings, Spacer, Text, truncateToWidth } from "@nova-ai/nova-tui";
+import { type Component, Container, getKeybindings, Spacer, Text, truncateToWidth } from "@topaca/nova-tui";
 import { theme } from "../theme/theme.js";
 import { DynamicBorder } from "./dynamic-border.js";
 

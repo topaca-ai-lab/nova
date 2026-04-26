@@ -1,4 +1,4 @@
-import type { ImageContent } from "@nova-ai/nova-ai";
+import type { ImageContent } from "@topaca/nova-ai";
 import { applyExifOrientation } from "./exif-orientation.js";
 import { loadPhoton } from "./photon.js";
 

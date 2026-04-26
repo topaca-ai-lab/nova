@@ -1,4 +1,4 @@
-import type { AgentTool } from "@nova-ai/nova-agent-core";
+import type { AgentTool } from "@topaca/nova-agent-core";
 import { basename, resolve as resolvePath } from "path";
 import { Type } from "typebox";
 

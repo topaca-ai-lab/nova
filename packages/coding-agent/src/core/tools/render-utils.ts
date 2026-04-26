@@ -1,6 +1,6 @@
 import * as os from "node:os";
-import type { ImageContent, TextContent } from "@nova-ai/nova-ai";
-import { getCapabilities, getImageDimensions, imageFallback } from "@nova-ai/nova-tui";
+import type { ImageContent, TextContent } from "@topaca/nova-ai";
+import { getCapabilities, getImageDimensions, imageFallback } from "@topaca/nova-tui";
 import stripAnsi from "strip-ansi";
 import { sanitizeBinaryOutput } from "../../utils/shell.js";
 

@@ -1,5 +1,5 @@
-import type { Api, Context, Model, SimpleStreamOptions } from "@nova-ai/nova-ai";
-import { streamSimple } from "@nova-ai/nova-ai";
+import type { Api, Context, Model, SimpleStreamOptions } from "@topaca/nova-ai";
+import { streamSimple } from "@topaca/nova-ai";
 
 /**
  * Centralized proxy decision logic.

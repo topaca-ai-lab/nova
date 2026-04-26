@@ -1,6 +1,6 @@
 import { i18n } from "@mariozechner/mini-lit";
-import type { AgentTool } from "@nova-ai/nova-agent-core";
-import type { ToolResultMessage } from "@nova-ai/nova-ai";
+import type { AgentTool } from "@topaca/nova-agent-core";
+import type { ToolResultMessage } from "@topaca/nova-ai";
 import { html } from "lit";
 import { createRef, ref } from "lit/directives/ref.js";
 import { Code } from "lucide";

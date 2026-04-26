@@ -1,7 +1,7 @@
 {
-	"name": "@nova-ai/nova-web-ui",
-	"version": "0.69.0",
-	"description": "Reusable web UI components for AI chat interfaces powered by @nova-ai/nova-ai",
+	"name": "@topaca/nova-web-ui",
+	"version": "0.70.2",
+	"description": "Reusable web UI components for AI chat interfaces powered by @topaca/nova-ai",
 	"type": "module",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -18,8 +18,8 @@
 	},
 	"dependencies": {
 		"@lmstudio/sdk": "^1.5.0",
-		"@nova-ai/nova-ai": "^0.69.0",
-		"@nova-ai/nova-tui": "^0.69.0",
+		"@topaca/nova-ai": "^0.70.2",
+		"@topaca/nova-tui": "^0.70.2",
 		"typebox": "^1.1.24",
 		"docx-preview": "^0.3.7",
 		"jszip": "^3.10.1",

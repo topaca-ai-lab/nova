@@ -1,8 +1,8 @@
-import type { AgentMessage, AgentTool } from "@nova-ai/nova-agent-core";
+import type { AgentMessage, AgentTool } from "@topaca/nova-agent-core";
 import type {
 	AssistantMessage as AssistantMessageType,
 	ToolResultMessage as ToolResultMessageType,
-} from "@nova-ai/nova-ai";
+} from "@topaca/nova-ai";
 import { html, LitElement, type TemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";

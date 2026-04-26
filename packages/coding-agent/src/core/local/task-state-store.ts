@@ -1,4 +1,4 @@
-import type { VisibleToolSlot } from "@nova-ai/nova-agent-core";
+import type { VisibleToolSlot } from "@topaca/nova-agent-core";
 
 export type TaskStateSnapshot = {
 	summary: string;

@@ -5,8 +5,8 @@
  * Responses and events are emitted as JSON lines on stdout.
  */
 
-import type { AgentMessage, ThinkingLevel } from "@nova-ai/nova-agent-core";
-import type { ImageContent, Model } from "@nova-ai/nova-ai";
+import type { AgentMessage, ThinkingLevel } from "@topaca/nova-agent-core";
+import type { ImageContent, Model } from "@topaca/nova-ai";
 import type { SessionStats } from "../../core/agent-session.js";
 import type { BashResult } from "../../core/bash-executor.js";
 import type { CompactionResult } from "../../core/compaction/index.js";

@@ -1,5 +1,5 @@
-import type { AgentTool } from "@nova-ai/nova-agent-core";
-import { Box, Container, Spacer, Text } from "@nova-ai/nova-tui";
+import type { AgentTool } from "@topaca/nova-agent-core";
+import { Box, Container, Spacer, Text } from "@topaca/nova-tui";
 import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
 import { type Static, Type } from "typebox";

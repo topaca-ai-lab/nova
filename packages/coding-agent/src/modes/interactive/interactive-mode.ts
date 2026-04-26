@@ -7,8 +7,15 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import type { AgentMessage } from "@nova-ai/nova-agent-core";
-import type { AssistantMessage, ImageContent, Message, Model, OAuthProviderId } from "@nova-ai/nova-ai";
+import type { AgentMessage } from "@topaca/nova-agent-core";
+import {
+	type AssistantMessage,
+	getProviders,
+	type ImageContent,
+	type Message,
+	type Model,
+	type OAuthProviderId,
+} from "@topaca/nova-ai";
 import type {
 	AutocompleteItem,
 	AutocompleteProvider,
@@ -20,7 +27,7 @@ import type {
 	OverlayHandle,
 	OverlayOptions,
 	SlashCommand,
-} from "@nova-ai/nova-tui";
+} from "@topaca/nova-tui";
 import {
 	CombinedAutocompleteProvider,
 	type Component,
@@ -37,7 +44,7 @@ import {
 	TruncatedText,
 	TUI,
 	visibleWidth,
-} from "@nova-ai/nova-tui";
+} from "@topaca/nova-tui";
 import { spawn, spawnSync } from "child_process";
 import {
 	APP_NAME,
@@ -45,6 +52,8 @@ import {
 	getAgentDir,
 	getAuthPath,
 	getDebugLogPath,
+	getDocsPath,
+	getModelsPath,
 	getShareViewerUrl,
 	getUpdateInstruction,
 	VERSION,
@@ -154,7 +163,7 @@ type CompactionQueuedMessage = {
 };
 
 const ANTHROPIC_SUBSCRIPTION_AUTH_WARNING =
-	"Anthropic subscription auth is active. Third-party usage now draws from extra usage and is billed per token, not your Claude plan limits. Manage extra usage at https://claude.ai/settings/usage.";
+	"Anthropic subscription auth is active. Third-party harness usage draws from extra usage and is billed per token, not your Claude plan limits. Manage extra usage at https://claude.ai/settings/usage.";
 
 function isAnthropicSubscriptionAuthKey(apiKey: string | undefined): boolean {
 	return typeof apiKey === "string" && apiKey.startsWith("sk-ant-oat");
@@ -168,7 +177,14 @@ function hasDefaultModelProvider(providerId: string): providerId is keyof typeof
 	return providerId in defaultModelPerProvider;
 }
 
-const API_KEY_PROVIDER_NAMES: Record<string, string> = {
+function isJsonRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+const BEDROCK_PROVIDER_ID = "amazon-bedrock";
+
+const API_KEY_LOGIN_PROVIDERS: Record<string, string> = {
+	anthropic: "Anthropic",
 	"azure-openai-responses": "Azure OpenAI Responses",
 	cerebras: "Cerebras",
 	fireworks: "Fireworks",
@@ -189,10 +205,25 @@ const API_KEY_PROVIDER_NAMES: Record<string, string> = {
 	zai: "ZAI",
 };
 
-const API_KEY_LOGIN_PROVIDER_BLOCKLIST = new Set(["amazon-bedrock", "llama.cpp", "lmstudio", "ollama"]);
+const BUILT_IN_API_KEY_LOGIN_PROVIDERS = new Set(Object.keys(API_KEY_LOGIN_PROVIDERS));
+const BUILT_IN_MODEL_PROVIDERS = new Set<string>(getProviders());
 
-function getApiKeyProviderDisplayName(providerId: string): string {
-	return API_KEY_PROVIDER_NAMES[providerId] ?? providerId;
+export function isApiKeyLoginProvider(
+	providerId: string,
+	oauthProviderIds: ReadonlySet<string>,
+	builtInProviderIds: ReadonlySet<string> = BUILT_IN_MODEL_PROVIDERS,
+): boolean {
+	if (BUILT_IN_API_KEY_LOGIN_PROVIDERS.has(providerId)) {
+		return true;
+	}
+	if (builtInProviderIds.has(providerId)) {
+		return false;
+	}
+	return !oauthProviderIds.has(providerId);
+}
+
+export function getApiKeyProviderDisplayName(providerId: string): string {
+	return API_KEY_LOGIN_PROVIDERS[providerId] ?? providerId;
 }
 
 /**
@@ -255,9 +286,6 @@ export class InteractiveMode {
 
 	// Tool execution tracking: toolCallId -> component
 	private pendingTools = new Map<string, ToolExecutionComponent>();
-
-	// Track first user message to avoid leading spacer at top of chat
-	private isFirstUserMessage = true;
 
 	// Tool output expansion state
 	private toolOutputExpanded = false;
@@ -757,7 +785,7 @@ export class InteractiveMode {
 		if (process.env.NOVA_SKIP_VERSION_CHECK || process.env.NOVA_OFFLINE) return undefined;
 
 		try {
-			const response = await fetch("https://registry.npmjs.org/@nova-ai/nova-coding-agent/latest", {
+			const response = await fetch("https://registry.npmjs.org/@topaca/nova-coding-agent/latest", {
 				signal: AbortSignal.timeout(10000),
 			});
 			if (!response.ok) return undefined;
@@ -1535,7 +1563,7 @@ export class InteractiveMode {
 
 		const extensionRunner = this.session.extensionRunner;
 		this.setupExtensionShortcuts(extensionRunner);
-		this.showLoadedResources({ force: false });
+		this.showLoadedResources({ force: false, showDiagnosticsWhenQuiet: true });
 		this.showStartupNoticesIfNeeded();
 	}
 
@@ -2996,7 +3024,7 @@ export class InteractiveMode {
 			case "user": {
 				const textContent = this.getUserMessageText(message);
 				if (textContent) {
-					if (!this.isFirstUserMessage) {
+					if (this.chatContainer.children.length > 0) {
 						this.chatContainer.addChild(new Spacer(1));
 					}
 					const skillBlock = parseSkillBlock(textContent);
@@ -3020,7 +3048,6 @@ export class InteractiveMode {
 						const userComponent = new UserMessageComponent(textContent, this.getMarkdownThemeWithSettings());
 						this.chatContainer.addChild(userComponent);
 					}
-					this.isFirstUserMessage = false;
 					if (options?.populateHistory) {
 						this.editor.addToHistory?.(textContent);
 					}
@@ -3058,7 +3085,6 @@ export class InteractiveMode {
 		options: { updateFooter?: boolean; populateHistory?: boolean } = {},
 	): void {
 		this.pendingTools.clear();
-		this.isFirstUserMessage = true;
 
 		if (options.updateFooter) {
 			this.footer.invalidate();
@@ -3174,7 +3200,8 @@ export class InteractiveMode {
 
 	/**
 	 * Gracefully shutdown the agent.
-	 * Emits shutdown event to extensions, then exits.
+	 * Stops the TUI before emitting shutdown events so extension UI cleanup cannot
+	 * repaint the final frame while the process is exiting.
 	 */
 	private isShuttingDown = false;
 
@@ -3182,17 +3209,13 @@ export class InteractiveMode {
 		if (this.isShuttingDown) return;
 		this.isShuttingDown = true;
 		this.unregisterSignalHandlers();
-		await this.runtimeHost.dispose();
-
-		// Wait for any pending renders to complete
-		// requestRender() uses process.nextTick(), so we wait one tick
-		await new Promise((resolve) => process.nextTick(resolve));
 
 		// Drain any in-flight Kitty key release events before stopping.
 		// This prevents escape sequences from leaking to the parent shell over slow SSH.
 		await this.ui.terminal.drainInput(1000);
 
 		this.stop();
+		await this.runtimeHost.dispose();
 		process.exit(0);
 	}
 
@@ -3452,7 +3475,7 @@ export class InteractiveMode {
 	}
 
 	showNewVersionNotification(newVersion: string): void {
-		const action = theme.fg("accent", getUpdateInstruction("@nova-ai/nova-coding-agent"));
+		const action = theme.fg("accent", getUpdateInstruction("@topaca/nova-coding-agent"));
 		const updateInstruction = theme.fg("muted", `New version ${newVersion} is available. `) + action;
 		const changelogUrl = theme.fg(
 			"accent",
@@ -3945,7 +3968,7 @@ export class InteractiveMode {
 				},
 				() => {
 					done();
-					this.showLoginAuthTypeSelector();
+					this.ui.requestRender();
 				},
 				initialSearchInput,
 			);
@@ -4310,7 +4333,7 @@ export class InteractiveMode {
 
 		const modelProviders = new Set(this.session.modelRegistry.getAll().map((model) => model.provider));
 		for (const providerId of modelProviders) {
-			if (oauthProviderIds.has(providerId) || API_KEY_LOGIN_PROVIDER_BLOCKLIST.has(providerId)) {
+			if (!isApiKeyLoginProvider(providerId, oauthProviderIds)) {
 				continue;
 			}
 			options.push({
@@ -4350,12 +4373,17 @@ export class InteractiveMode {
 	private showLoginAuthTypeSelector(): void {
 		const subscriptionLabel = "Use a subscription";
 		const apiKeyLabel = "Use an API key";
+		const localLlmLabel = "Use local LLM";
 		this.showSelector((done) => {
 			const selector = new ExtensionSelectorComponent(
 				"Select authentication method:",
-				[subscriptionLabel, apiKeyLabel],
+				[subscriptionLabel, apiKeyLabel, localLlmLabel],
 				(option) => {
 					done();
+					if (option === localLlmLabel) {
+						void this.showLocalLlmLoginDialog();
+						return;
+					}
 					const authType = option === subscriptionLabel ? "oauth" : "api_key";
 					this.showLoginProviderSelector(authType);
 				},
@@ -4366,6 +4394,131 @@ export class InteractiveMode {
 			);
 			return { component: selector, focus: selector };
 		});
+	}
+
+	private normalizeLocalLlmBaseUrl(baseUrl: string): string {
+		const trimmed = baseUrl.trim().replace(/\/+$/, "");
+		if (trimmed === "") {
+			return trimmed;
+		}
+
+		if (trimmed.endsWith("/v1")) {
+			return trimmed;
+		}
+
+		return `${trimmed}/v1`;
+	}
+
+	private upsertLocalLlmModel(providerId: string, baseUrl: string, modelId: string, apiKey: string): void {
+		const modelsPath = getModelsPath();
+		const modelsDir = path.dirname(modelsPath);
+		const nextRoot: Record<string, unknown> = {};
+		if (fs.existsSync(modelsPath)) {
+			const raw = fs.readFileSync(modelsPath, "utf-8").trim();
+			if (raw.length > 0) {
+				const parsed: unknown = JSON.parse(raw);
+				if (!isJsonRecord(parsed)) {
+					throw new Error("models.json must contain a JSON object.");
+				}
+				Object.assign(nextRoot, parsed);
+			}
+		}
+
+		const providersRaw = nextRoot.providers;
+		const providers = isJsonRecord(providersRaw) ? { ...providersRaw } : {};
+		const providerRaw = providers[providerId];
+		const providerConfig = isJsonRecord(providerRaw) ? { ...providerRaw } : {};
+		providerConfig.api = "openai-completions";
+		providerConfig.baseUrl = baseUrl;
+		providerConfig.apiKey = apiKey;
+
+		const existingModelsRaw = providerConfig.models;
+		const existingModels = Array.isArray(existingModelsRaw) ? [...existingModelsRaw] : [];
+		const hasModel = existingModels.some((entry) => isJsonRecord(entry) && entry.id === modelId);
+		if (!hasModel) {
+			existingModels.push({
+				id: modelId,
+				name: modelId,
+			});
+		}
+		providerConfig.models = existingModels;
+		providers[providerId] = providerConfig;
+		nextRoot.providers = providers;
+
+		fs.mkdirSync(modelsDir, { recursive: true });
+		fs.writeFileSync(modelsPath, `${JSON.stringify(nextRoot, null, 2)}\n`, "utf-8");
+	}
+
+	private async showLocalLlmLoginDialog(): Promise<void> {
+		const providerId = "local-openai";
+		const providerName = "Local LLM";
+		const previousModel = this.session.model;
+		const defaultBaseUrl =
+			process.env.NOVA_LOCAL_BASE_URL ||
+			process.env.LITELLM_BASE_URL ||
+			process.env.OPENAI_BASE_URL ||
+			"http://localhost:4000/v1";
+		const defaultModel = process.env.NOVA_LOCAL_MODEL || "qwen3.6";
+		const defaultApiKey = process.env.NOVA_LOCAL_API_KEY || process.env.OPENAI_API_KEY || "";
+
+		const dialog = new LoginDialogComponent(
+			this.ui,
+			providerId,
+			(_success, _message) => {
+				// Completion handled below
+			},
+			providerName,
+		);
+
+		this.editorContainer.clear();
+		this.editorContainer.addChild(dialog);
+		this.ui.setFocus(dialog);
+		this.ui.requestRender();
+
+		const restoreEditor = () => {
+			this.editorContainer.clear();
+			this.editorContainer.addChild(this.editor);
+			this.ui.setFocus(this.editor);
+			this.ui.requestRender();
+		};
+
+		try {
+			const rawBaseUrl = (await dialog.showPrompt("Base URL (OpenAI-compatible endpoint):", defaultBaseUrl)).trim();
+			if (!rawBaseUrl) {
+				throw new Error("Base URL cannot be empty.");
+			}
+			const baseUrl = this.normalizeLocalLlmBaseUrl(rawBaseUrl);
+
+			const modelId = (await dialog.showPrompt("Model ID:", defaultModel)).trim();
+			if (!modelId) {
+				throw new Error("Model ID cannot be empty.");
+			}
+
+			const apiKeyInput = (await dialog.showPrompt("API key (optional, defaults to test):", defaultApiKey)).trim();
+			const apiKey = apiKeyInput.length > 0 ? apiKeyInput : "test";
+
+			this.upsertLocalLlmModel(providerId, baseUrl, modelId, apiKey);
+			this.session.modelRegistry.authStorage.set(providerId, { type: "api_key", key: apiKey });
+
+			this.session.modelRegistry.refresh();
+			const selectedModel = this.session.modelRegistry.getAll().find((model) => {
+				return model.provider === providerId && model.id === modelId;
+			});
+			if (!selectedModel) {
+				throw new Error(`Model "${providerId}/${modelId}" was not found after updating models.json.`);
+			}
+
+			await this.session.setModel(selectedModel);
+			this.settingsManager.setDefaultModelAndProvider(providerId, modelId);
+			restoreEditor();
+			await this.completeProviderAuthentication(providerId, providerName, "api_key", previousModel);
+		} catch (error: unknown) {
+			restoreEditor();
+			const errorMsg = error instanceof Error ? error.message : String(error);
+			if (errorMsg !== "Login cancelled") {
+				this.showError(`Failed to configure local LLM: ${errorMsg}`);
+			}
+		}
 	}
 
 	private showLoginProviderSelector(authType: "oauth" | "api_key"): void {
@@ -4392,6 +4545,8 @@ export class InteractiveMode {
 
 					if (providerOption.authType === "oauth") {
 						await this.showLoginDialog(providerOption.id, providerOption.name);
+					} else if (providerOption.id === BEDROCK_PROVIDER_ID) {
+						this.showBedrockSetupDialog(providerOption.id, providerOption.name);
 					} else {
 						await this.showApiKeyLoginDialog(providerOption.id, providerOption.name);
 					}
@@ -4403,6 +4558,34 @@ export class InteractiveMode {
 			);
 			return { component: selector, focus: selector };
 		});
+	}
+
+	private showBedrockSetupDialog(providerId: string, providerName: string): void {
+		const restoreEditor = () => {
+			this.editorContainer.clear();
+			this.editorContainer.addChild(this.editor);
+			this.ui.setFocus(this.editor);
+			this.ui.requestRender();
+		};
+
+		const dialog = new LoginDialogComponent(
+			this.ui,
+			providerId,
+			() => restoreEditor(),
+			providerName,
+			"Amazon Bedrock setup",
+		);
+		dialog.showInfo([
+			theme.fg("text", "Amazon Bedrock uses AWS credentials instead of a single API key."),
+			theme.fg("text", "Configure an AWS profile, IAM keys, bearer token, or role-based credentials."),
+			theme.fg("muted", "See:"),
+			theme.fg("accent", `  ${path.join(getDocsPath(), "providers.md")}`),
+		]);
+
+		this.editorContainer.clear();
+		this.editorContainer.addChild(dialog);
+		this.ui.setFocus(dialog);
+		this.ui.requestRender();
 	}
 
 	private async showOAuthSelector(mode: "login" | "logout"): Promise<void> {

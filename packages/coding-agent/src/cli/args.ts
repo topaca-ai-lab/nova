@@ -2,7 +2,7 @@
  * CLI argument parsing and help display
  */
 
-import type { ThinkingLevel } from "@nova-ai/nova-agent-core";
+import type { ThinkingLevel } from "@topaca/nova-agent-core";
 import chalk from "chalk";
 import { APP_NAME, CONFIG_DIR_NAME, ENV_AGENT_DIR } from "../config.js";
 import type { ExtensionFlag } from "../core/extensions/types.js";
@@ -203,6 +203,7 @@ ${chalk.bold("Commands:")}
   ${APP_NAME} update [source]           Update installed extensions (skips pinned sources)
   ${APP_NAME} list                      List installed extensions from settings
   ${APP_NAME} config                    Open TUI to enable/disable package resources
+  ${APP_NAME} status [options]          Show Nova runtime status snapshot
   ${APP_NAME} local doctor [options]    Probe local runtime capabilities
   ${APP_NAME} local inspect [options]   Show resolved local runtime profile
   ${APP_NAME} local bench run [options] Run local benchmark suite and store artifact
@@ -331,6 +332,9 @@ ${chalk.bold("Environment Variables:")}
   NOVA_LOCAL_API_KEY                 - API key override for 'nova local doctor' (falls back to OPENAI_API_KEY)
   NOVA_LOCAL_TIMEOUT_MS              - Timeout for 'nova local doctor' in milliseconds
   NOVA_LOCAL_DOCTOR_JSON             - Force JSON output for 'nova local doctor' when set to 1/true/yes
+  NOVA_STATUS_INTERVAL_MS            - Default refresh interval for 'nova status --watch'
+  NOVA_STATUS_HEARTBEAT_RUNNING      - Optional scheduler signal for 'nova status' (1/0, true/false, yes/no)
+  NOVA_STATUS_CRON_RUNNING           - Optional scheduler signal for 'nova status' (1/0, true/false, yes/no)
   NOVA_LOCAL_PROFILE                 - Apply local runtime profile at startup (e.g. ollama_openai_compat)
   NOVA_LOCAL_REFERENCE               - Apply local reference profile (qwen3_vllm|qwen3_sglang|qwen3_ollama_litellm)
   NOVA_LOCAL_MODE                    - Enable local reference mode (defaults to qwen3_ollama_litellm)

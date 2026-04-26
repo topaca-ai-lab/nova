@@ -1,5 +1,5 @@
-import type { AgentMessage } from "@nova-ai/nova-agent-core";
-import type { ContextPolicy } from "@nova-ai/nova-ai";
+import type { AgentMessage } from "@topaca/nova-agent-core";
+import type { ContextPolicy } from "@topaca/nova-ai";
 import type { FileMemorySegment } from "./file-memory.js";
 import type { TaskStateSnapshot } from "./task-state-store.js";
 import type { WorkingMemorySnapshot } from "./working-memory.js";

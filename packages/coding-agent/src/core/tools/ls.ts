@@ -1,5 +1,5 @@
-import type { AgentTool } from "@nova-ai/nova-agent-core";
-import { Text } from "@nova-ai/nova-tui";
+import type { AgentTool } from "@topaca/nova-agent-core";
+import { Text } from "@topaca/nova-tui";
 import { existsSync, readdirSync, statSync } from "fs";
 import nodePath from "path";
 import { type Static, Type } from "typebox";

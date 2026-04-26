@@ -1,4 +1,4 @@
-import { getLocalRuntimeProfile, type OpenAICompletionsCompat, resolveReferenceRuntimeProfile } from "@nova-ai/nova-ai";
+import { getLocalRuntimeProfile, type OpenAICompletionsCompat, resolveReferenceRuntimeProfile } from "@topaca/nova-ai";
 import type { ModelRegistry } from "./model-registry.js";
 
 type LocalRuntimeProfileDiagnostic = {

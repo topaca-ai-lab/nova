@@ -1,5 +1,5 @@
-import { Agent, type AgentEvent } from "@nova-ai/nova-agent-core";
-import { getModel, type ImageContent } from "@nova-ai/nova-ai";
+import { Agent, type AgentEvent } from "@topaca/nova-agent-core";
+import { getModel, type ImageContent } from "@topaca/nova-ai";
 import {
 	AgentSession,
 	AuthStorage,
@@ -11,7 +11,7 @@ import {
 	type ResourceLoader,
 	SessionManager,
 	type Skill,
-} from "@nova-ai/nova-coding-agent";
+} from "@topaca/nova-coding-agent";
 import { existsSync, readFileSync } from "fs";
 import { mkdir, writeFile } from "fs/promises";
 import { homedir } from "os";

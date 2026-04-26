@@ -9,7 +9,7 @@ import type {
 	TextContent,
 	Tool,
 	ToolResultMessage,
-} from "@nova-ai/nova-ai";
+} from "@topaca/nova-ai";
 import type { Static, TSchema } from "typebox";
 
 /**

@@ -1,4 +1,4 @@
-import type { ToolResultMessage } from "@nova-ai/nova-ai";
+import type { ToolResultMessage } from "@topaca/nova-ai";
 import type { TemplateResult } from "lit";
 
 export interface ToolRenderResult {
