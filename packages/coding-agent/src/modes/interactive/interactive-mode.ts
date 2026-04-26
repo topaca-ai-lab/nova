@@ -177,10 +177,6 @@ function hasDefaultModelProvider(providerId: string): providerId is keyof typeof
 	return providerId in defaultModelPerProvider;
 }
 
-function isJsonRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 const BEDROCK_PROVIDER_ID = "amazon-bedrock";
 
 const API_KEY_LOGIN_PROVIDERS: Record<string, string> = {
@@ -210,10 +206,7 @@ const LOCAL_LOGIN_OPTION_LABEL = "Use local LLM";
 const LOCAL_PROVIDER_ID = "local-openai";
 const DEFAULT_LOCAL_PROFILE_ID = "ollama_openai_compat";
 
-export function isApiKeyLoginProvider(
-	providerId: string,
-	oauthProviderIds: ReadonlySet<string>,
-): boolean {
+export function isApiKeyLoginProvider(providerId: string, oauthProviderIds: ReadonlySet<string>): boolean {
 	if (API_KEY_LOGIN_PROVIDER_BLOCKLIST.has(providerId)) {
 		return false;
 	}
@@ -4418,131 +4411,6 @@ export class InteractiveMode {
 			);
 			return { component: selector, focus: selector };
 		});
-	}
-
-	private normalizeLocalLlmBaseUrl(baseUrl: string): string {
-		const trimmed = baseUrl.trim().replace(/\/+$/, "");
-		if (trimmed === "") {
-			return trimmed;
-		}
-
-		if (trimmed.endsWith("/v1")) {
-			return trimmed;
-		}
-
-		return `${trimmed}/v1`;
-	}
-
-	private upsertLocalLlmModel(providerId: string, baseUrl: string, modelId: string, apiKey: string): void {
-		const modelsPath = getModelsPath();
-		const modelsDir = path.dirname(modelsPath);
-		const nextRoot: Record<string, unknown> = {};
-		if (fs.existsSync(modelsPath)) {
-			const raw = fs.readFileSync(modelsPath, "utf-8").trim();
-			if (raw.length > 0) {
-				const parsed: unknown = JSON.parse(raw);
-				if (!isJsonRecord(parsed)) {
-					throw new Error("models.json must contain a JSON object.");
-				}
-				Object.assign(nextRoot, parsed);
-			}
-		}
-
-		const providersRaw = nextRoot.providers;
-		const providers = isJsonRecord(providersRaw) ? { ...providersRaw } : {};
-		const providerRaw = providers[providerId];
-		const providerConfig = isJsonRecord(providerRaw) ? { ...providerRaw } : {};
-		providerConfig.api = "openai-completions";
-		providerConfig.baseUrl = baseUrl;
-		providerConfig.apiKey = apiKey;
-
-		const existingModelsRaw = providerConfig.models;
-		const existingModels = Array.isArray(existingModelsRaw) ? [...existingModelsRaw] : [];
-		const hasModel = existingModels.some((entry) => isJsonRecord(entry) && entry.id === modelId);
-		if (!hasModel) {
-			existingModels.push({
-				id: modelId,
-				name: modelId,
-			});
-		}
-		providerConfig.models = existingModels;
-		providers[providerId] = providerConfig;
-		nextRoot.providers = providers;
-
-		fs.mkdirSync(modelsDir, { recursive: true });
-		fs.writeFileSync(modelsPath, `${JSON.stringify(nextRoot, null, 2)}\n`, "utf-8");
-	}
-
-	private async showLocalLlmLoginDialog(): Promise<void> {
-		const providerId = "local-openai";
-		const providerName = "Local LLM";
-		const previousModel = this.session.model;
-		const defaultBaseUrl =
-			process.env.NOVA_LOCAL_BASE_URL ||
-			process.env.LITELLM_BASE_URL ||
-			process.env.OPENAI_BASE_URL ||
-			"http://localhost:4000/v1";
-		const defaultModel = process.env.NOVA_LOCAL_MODEL || "qwen3.6";
-		const defaultApiKey = process.env.NOVA_LOCAL_API_KEY || process.env.OPENAI_API_KEY || "";
-
-		const dialog = new LoginDialogComponent(
-			this.ui,
-			providerId,
-			(_success, _message) => {
-				// Completion handled below
-			},
-			providerName,
-		);
-
-		this.editorContainer.clear();
-		this.editorContainer.addChild(dialog);
-		this.ui.setFocus(dialog);
-		this.ui.requestRender();
-
-		const restoreEditor = () => {
-			this.editorContainer.clear();
-			this.editorContainer.addChild(this.editor);
-			this.ui.setFocus(this.editor);
-			this.ui.requestRender();
-		};
-
-		try {
-			const rawBaseUrl = (await dialog.showPrompt("Base URL (OpenAI-compatible endpoint):", defaultBaseUrl)).trim();
-			if (!rawBaseUrl) {
-				throw new Error("Base URL cannot be empty.");
-			}
-			const baseUrl = this.normalizeLocalLlmBaseUrl(rawBaseUrl);
-
-			const modelId = (await dialog.showPrompt("Model ID:", defaultModel)).trim();
-			if (!modelId) {
-				throw new Error("Model ID cannot be empty.");
-			}
-
-			const apiKeyInput = (await dialog.showPrompt("API key (optional, defaults to test):", defaultApiKey)).trim();
-			const apiKey = apiKeyInput.length > 0 ? apiKeyInput : "test";
-
-			this.upsertLocalLlmModel(providerId, baseUrl, modelId, apiKey);
-			this.session.modelRegistry.authStorage.set(providerId, { type: "api_key", key: apiKey });
-
-			this.session.modelRegistry.refresh();
-			const selectedModel = this.session.modelRegistry.getAll().find((model) => {
-				return model.provider === providerId && model.id === modelId;
-			});
-			if (!selectedModel) {
-				throw new Error(`Model "${providerId}/${modelId}" was not found after updating models.json.`);
-			}
-
-			await this.session.setModel(selectedModel);
-			this.settingsManager.setDefaultModelAndProvider(providerId, modelId);
-			restoreEditor();
-			await this.completeProviderAuthentication(providerId, providerName, "api_key", previousModel);
-		} catch (error: unknown) {
-			restoreEditor();
-			const errorMsg = error instanceof Error ? error.message : String(error);
-			if (errorMsg !== "Login cancelled") {
-				this.showError(`Failed to configure local LLM: ${errorMsg}`);
-			}
-		}
 	}
 
 	private showLoginProviderSelector(authType: "oauth" | "api_key"): void {
